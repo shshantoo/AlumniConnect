@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { BrowserRouter } from 'react-router-dom';
+import { HashRouter } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext';
 import { AppRoutes } from './routes/AppRoutes';
 import { supabase } from './utils/supabase';
@@ -10,15 +10,9 @@ export default function App() {
   useEffect(() => {
     async function checkSupabaseConnection() {
       try {
-        // Query database table as instructed in step 2 of request
-        const { data, error } = await supabase.from('users').select('count', { count: 'exact', head: true });
-        if (!error) {
-          setSupabaseConnected(true);
-        } else {
-          setSupabaseConnected(false);
-        }
+        const { error } = await supabase.from('users').select('count', { count: 'exact', head: true });
+        setSupabaseConnected(!error);
       } catch (err) {
-        console.log('Supabase initialized; using resilient seed data fallback mode:', err);
         setSupabaseConnected(false);
       }
     }
@@ -26,10 +20,10 @@ export default function App() {
   }, []);
 
   return (
-    <BrowserRouter>
+    <HashRouter>
       <AuthProvider>
         <AppRoutes />
       </AuthProvider>
-    </BrowserRouter>
+    </HashRouter>
   );
 }
