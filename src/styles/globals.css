@@ -1,0 +1,115 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    @apply bg-[#f8f6f0] text-zinc-900 font-sans antialiased selection:bg-[#ff5500] selection:text-white min-h-screen overflow-x-hidden;
+  }
+}
+
+/* Reference Style Paper Scrollbars */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #f8f6f0;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #d4ccbd;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #ff5500;
+}
+
+/* Reference Style Pill Badges */
+.taste-pill {
+  background-color: #fce8d5;
+  border: 1px solid #f8cbb0;
+  color: #0a0a0a;
+  border-radius: 9999px;
+  padding: 0.25rem 0.875rem;
+  font-size: 0.75rem;
+  font-weight: 500;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+}
+
+/* Custom Cards */
+.taste-card {
+  background: #ffffff;
+  border: 1px solid #e5e0d5;
+  border-radius: 1rem;
+  box-shadow: 0 4px 20px -6px rgba(0, 0, 0, 0.04);
+}
+
+.taste-card-hover {
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.taste-card-hover:hover {
+  border-color: #ff945e;
+  transform: translateY(-2px);
+  box-shadow: 0 10px 25px -8px rgba(255, 85, 0, 0.12);
+}
+
+/* Reference Black & White Buttons */
+.btn-black {
+  background-color: #0a0a0a;
+  color: #ffffff;
+  border-radius: 1rem;
+  font-weight: 700;
+  transition: all 0.2s ease;
+  box-shadow: 0 4px 14px -3px rgba(0, 0, 0, 0.25);
+}
+
+.btn-black:hover {
+  background-color: #262626;
+  transform: translateY(-1px);
+}
+
+.btn-white {
+  background-color: #ffffff;
+  color: #0a0a0a;
+  border: 1px solid #e5e0d5;
+  border-radius: 1rem;
+  font-weight: 600;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 8px -2px rgba(0, 0, 0, 0.05);
+}
+
+.btn-white:hover {
+  background-color: #faf9f6;
+  border-color: #d4ccbd;
+  transform: translateY(-1px);
+}
+
+/* Text Gradient */
+.gradient-text {
+  @apply bg-clip-text text-transparent bg-gradient-to-r from-[#ff5500] via-[#ea580c] to-zinc-950;
+}
+
+/* Animations */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes scaleUp {
+  from { opacity: 0; transform: scale(0.96); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+.animate-fadeIn {
+  animation: fadeIn 0.35s ease-out forwards;
+}
+
+.animate-scaleUp {
+  animation: scaleUp 0.25s ease-out forwards;
+}
