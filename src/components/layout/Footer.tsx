@@ -60,7 +60,7 @@ export const Footer: React.FC = () => {
       <div className="max-w-7xl mx-auto pt-6 border-t border-[#e5e0d5] flex flex-col sm:flex-row items-center justify-between gap-4 text-[11px] text-zinc-500">
         <p>© 2026 AlumniConnect CSE Project. Built with React 19, Vite, Tailwind & Supabase.</p>
         <p className="flex items-center gap-1">
-          Designed with <Heart className="w-3 h-3 text-[#ff5500] fill-[#ff5500]" /> in Taste Skill Aesthetic (Paper, Black & Orange)
+          Designed with <Heart className="w-3 h-3 text-[#ff5500] fill-[#ff5500]" /> for CSE Department
         </p>
       </div>
     </footer>
