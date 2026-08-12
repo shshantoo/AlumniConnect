@@ -5,7 +5,7 @@ export const Footer: React.FC = () => {
   return (
     <footer className="bg-[#f0ede6] border-t border-[#e5e0d5] text-zinc-600 py-12 px-4 sm:px-6 lg:px-8 mt-16 text-xs">
       <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-4 gap-8 mb-8">
-        
+
         <div className="space-y-3">
           <div className="flex items-center gap-2">
             <div className="w-7 h-7 rounded-lg bg-[#0a0a0a] flex items-center justify-center shadow-xs">
@@ -60,7 +60,7 @@ export const Footer: React.FC = () => {
       <div className="max-w-7xl mx-auto pt-6 border-t border-[#e5e0d5] flex flex-col sm:flex-row items-center justify-between gap-4 text-[11px] text-zinc-500">
         <p>© 2026 AlumniConnect CSE Project. Built with React 19, Vite, Tailwind & Supabase.</p>
         <p className="flex items-center gap-1">
-          Designed with <Heart className="w-3 h-3 text-[#ff5500] fill-[#ff5500]" /> for CSE Department
+
         </p>
       </div>
     </footer>
