@@ -1,13 +1,13 @@
 import React, { useState } from 'react';
 import { 
   UserProfile, WorkExperienceItem, EducationItem, 
-  CategorizedSkillItem, ProjectItem, CertificationItem, 
-  PublicationItem, ActivityItem, LanguageItem 
+  CategorizedSkillItem, ProjectItem, CertificationItem 
 } from '../../types/database.types';
 import { 
   X, Check, Plus, Trash2, Sparkles, ArrowLeft, 
-  ArrowRight, Download, Printer, User, GraduationCap, 
-  Briefcase, Code, Award, BookOpen, HeartHandshake, FileText
+  ArrowRight, Printer, User, GraduationCap, 
+  Briefcase, Code, Award, BookOpen, HeartHandshake, FileText,
+  Camera, Upload, Image as ImageIcon
 } from 'lucide-react';
 
 interface CvBuilderModalProps {
@@ -41,6 +41,7 @@ export const CvBuilderModal: React.FC<CvBuilderModalProps> = ({
     dob: initialProfile?.dob || '',
     gender: initialProfile?.gender || '',
     nationality: initialProfile?.nationality || '',
+    photo: initialProfile?.photo || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=300&q=80',
     bio: initialProfile?.bio || '',
     linkedin: initialProfile?.linkedin || '',
     portfolio: initialProfile?.portfolio || '',
@@ -140,6 +141,18 @@ export const CvBuilderModal: React.FC<CvBuilderModalProps> = ({
 
   if (!isOpen) return null;
 
+  // Photo File Upload Handler
+  const handlePhotoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setFormData(prev => ({ ...prev, photo: reader.result as string }));
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
   // Handle Dynamic Array Field Updates
   const addWorkExp = () => {
     const newWork: WorkExperienceItem = {
@@ -235,7 +248,7 @@ export const CvBuilderModal: React.FC<CvBuilderModalProps> = ({
 
   // Steps Configuration
   const STEPS = [
-    { num: 1, title: 'Personal Info', icon: User },
+    { num: 1, title: 'Personal & Photo', icon: User },
     { num: 2, title: 'University & Alumni', icon: GraduationCap },
     { num: 3, title: 'AI Summary', icon: Sparkles },
     { num: 4, title: 'Work Experience', icon: Briefcase },
@@ -295,10 +308,45 @@ export const CvBuilderModal: React.FC<CvBuilderModalProps> = ({
         {/* Modal Form Body */}
         <div className="p-6 overflow-y-auto flex-1 space-y-6 text-xs text-zinc-800">
           
-          {/* STEP 1: Personal Info */}
+          {/* STEP 1: Personal Info & Photo Upload */}
           {currentStep === 1 && (
-            <div className="space-y-4 animate-fadeIn">
-              <h3 className="text-base font-extrabold text-[#0a0a0a]">Step 1: Personal & Contact Information</h3>
+            <div className="space-y-5 animate-fadeIn">
+              <h3 className="text-base font-extrabold text-[#0a0a0a]">Step 1: Personal Information & Profile Photo</h3>
+              
+              {/* Profile Photo Upload Box */}
+              <div className="taste-card p-4 flex flex-col sm:flex-row items-center gap-4 bg-[#f8f6f0] border border-[#e5e0d5]">
+                <div className="relative group w-20 h-20 flex-shrink-0">
+                  <img
+                    src={formData.photo || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=300&q=80'}
+                    alt="Profile Avatar Preview"
+                    className="w-20 h-20 rounded-2xl object-cover ring-2 ring-[#ff5500]/30 shadow-sm"
+                  />
+                  <label className="absolute inset-0 bg-black/50 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center cursor-pointer text-white text-xs font-bold gap-1">
+                    <Camera className="w-4 h-4 text-[#ff5500]" />
+                    <input type="file" accept="image/*" onChange={handlePhotoUpload} className="hidden" />
+                  </label>
+                </div>
+
+                <div className="space-y-1 text-center sm:text-left flex-1">
+                  <h4 className="font-bold text-zinc-950 text-xs">Profile Picture Avatar</h4>
+                  <p className="text-[11px] text-zinc-500">Upload a JPG/PNG image file or paste an image URL.</p>
+                  
+                  <div className="flex flex-wrap items-center gap-2 pt-1 justify-center sm:justify-start">
+                    <label className="btn-black px-3 py-1.5 text-[11px] font-bold cursor-pointer inline-flex items-center gap-1.5 shadow-xs">
+                      <Upload className="w-3.5 h-3.5 text-[#ff5500]" /> Upload Image File
+                      <input type="file" accept="image/*" onChange={handlePhotoUpload} className="hidden" />
+                    </label>
+                    <input
+                      type="text"
+                      placeholder="Or paste image URL..."
+                      value={formData.photo || ''}
+                      onChange={(e) => setFormData({ ...formData, photo: e.target.value })}
+                      className="bg-white border border-[#e5e0d5] rounded-xl px-3 py-1.5 text-xs text-zinc-900 focus:outline-none max-w-xs"
+                    />
+                  </div>
+                </div>
+              </div>
+
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                 <div>
                   <label className="block font-bold mb-1">First Name *</label>
@@ -913,10 +961,17 @@ export const CvBuilderModal: React.FC<CvBuilderModalProps> = ({
               <div className="bg-white border border-zinc-300 rounded-2xl p-8 space-y-6 shadow-md text-zinc-900 font-sans print:shadow-none print:border-none">
                 {/* CV Header */}
                 <div className="border-b border-zinc-900 pb-4 flex justify-between items-start">
-                  <div>
-                    <h1 className="text-2xl font-extrabold text-zinc-950 uppercase tracking-tight">{formData.full_name || 'Your Full Name'}</h1>
-                    <p className="text-sm text-[#ff5500] font-bold">{formData.headline || 'Software Engineer'}</p>
-                    <p className="text-xs text-zinc-600 mt-1">{formData.email} • {formData.phone} • {formData.location}, {formData.country}</p>
+                  <div className="flex items-center gap-4">
+                    <img
+                      src={formData.photo || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=300&q=80'}
+                      alt="CV Avatar"
+                      className="w-16 h-16 rounded-xl object-cover ring-1 ring-zinc-300"
+                    />
+                    <div>
+                      <h1 className="text-2xl font-extrabold text-zinc-950 uppercase tracking-tight">{formData.full_name || 'Your Full Name'}</h1>
+                      <p className="text-sm text-[#ff5500] font-bold">{formData.headline || 'Software Engineer'}</p>
+                      <p className="text-xs text-zinc-600 mt-1">{formData.email} • {formData.phone} • {formData.location}, {formData.country}</p>
+                    </div>
                   </div>
                   {formData.linkedin && (
                     <span className="text-[11px] font-mono text-zinc-500">{formData.linkedin}</span>

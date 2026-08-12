@@ -1,30 +1,90 @@
 -- =========================================================
 -- AlumniConnect Database Schema (PostgreSQL for Supabase)
--- 20+ Tables with RLS Policies & Indices
+-- Upgraded 18-Section Profiles, Username Auth & Storage Buckets
 -- =========================================================
 
 -- Enable UUID Extension
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 
--- 1. USERS TABLE
+-- 1. USERS TABLE (Supports Login with Email or Username)
 CREATE TABLE IF NOT EXISTS public.users (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     email VARCHAR(255) UNIQUE NOT NULL,
+    username VARCHAR(100) UNIQUE,
+    first_name VARCHAR(100),
+    last_name VARCHAR(100),
+    mobile VARCHAR(50),
     role VARCHAR(50) NOT NULL CHECK (role IN ('student', 'alumni', 'employer', 'faculty', 'admin')),
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
 
--- 2. PROFILES TABLE
+-- 2. PROFILES TABLE (Full 18-Section CV & Alumni Data)
 CREATE TABLE IF NOT EXISTS public.profiles (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     user_id UUID UNIQUE REFERENCES public.users(id) ON DELETE CASCADE,
     full_name VARCHAR(255) NOT NULL,
+    first_name VARCHAR(100),
+    last_name VARCHAR(100),
+    username VARCHAR(100),
+    preferred_name VARCHAR(100),
+    headline VARCHAR(255),
+    email VARCHAR(255),
     phone VARCHAR(50),
-    photo VARCHAR(500),
+    country VARCHAR(100) DEFAULT 'Bangladesh',
+    location VARCHAR(100) DEFAULT 'Dhaka',
+    dob DATE,
+    gender VARCHAR(30),
+    nationality VARCHAR(100),
+    photo VARCHAR(1000),
     bio TEXT,
     linkedin VARCHAR(255),
     portfolio VARCHAR(255),
-    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+    github VARCHAR(255),
+    social_links JSONB DEFAULT '{}'::jsonb,
+
+    -- University & Alumni Info
+    university VARCHAR(255) DEFAULT 'University of Engineering & Technology',
+    student_id VARCHAR(50),
+    department VARCHAR(100) DEFAULT 'Computer Science & Engineering',
+    program_degree VARCHAR(255) DEFAULT 'B.Sc. in Computer Science & Engineering',
+    major_minor VARCHAR(255),
+    batch_year VARCHAR(20),
+    enrollment_year VARCHAR(20),
+    graduation_date DATE,
+    cgpa NUMERIC(3,2),
+    academic_achievements TEXT[],
+    university_clubs TEXT[],
+    club_positions TEXT[],
+    thesis_project TEXT,
+    thesis_supervisor VARCHAR(255),
+
+    -- Professional Summary
+    career_objective TEXT,
+    professional_summary TEXT,
+    areas_of_expertise TEXT[],
+    career_interests TEXT[],
+
+    -- Rich 18-Section Collections (Stored as JSONB)
+    education_history JSONB DEFAULT '[]'::jsonb,
+    work_experience JSONB DEFAULT '[]'::jsonb,
+    skills_categorized JSONB DEFAULT '[]'::jsonb,
+    projects_list JSONB DEFAULT '[]'::jsonb,
+    certifications_list JSONB DEFAULT '[]'::jsonb,
+    workshops_list JSONB DEFAULT '[]'::jsonb,
+    awards_list JSONB DEFAULT '[]'::jsonb,
+    publications_list JSONB DEFAULT '[]'::jsonb,
+    extracurriculars_list JSONB DEFAULT '[]'::jsonb,
+    volunteer_list JSONB DEFAULT '[]'::jsonb,
+    leadership_list JSONB DEFAULT '[]'::jsonb,
+    languages_list JSONB DEFAULT '[]'::jsonb,
+    interests_tags TEXT[],
+    references_list JSONB DEFAULT '[]'::jsonb,
+
+    -- Alumni Networking Preferences
+    alumni_preferences JSONB DEFAULT '{}'::jsonb,
+
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
 
 -- 3. STUDENTS TABLE
@@ -48,8 +108,8 @@ CREATE TABLE IF NOT EXISTS public.alumni (
     graduation_year INT NOT NULL,
     company VARCHAR(255),
     position VARCHAR(255),
-    country VARCHAR(100) DEFAULT 'USA',
-    city VARCHAR(100) DEFAULT 'San Francisco',
+    country VARCHAR(100) DEFAULT 'Bangladesh',
+    city VARCHAR(100) DEFAULT 'Dhaka',
     experience VARCHAR(50),
     mentor BOOLEAN DEFAULT false,
     visibility VARCHAR(20) DEFAULT 'public',
@@ -72,183 +132,110 @@ CREATE TABLE IF NOT EXISTS public.employers (
 CREATE TABLE IF NOT EXISTS public.faculty (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     user_id UUID UNIQUE REFERENCES public.users(id) ON DELETE CASCADE,
+    designation VARCHAR(100) NOT NULL,
     department VARCHAR(100) DEFAULT 'CSE',
-    title VARCHAR(100) NOT NULL,
     office_hours VARCHAR(255),
-    research_area VARCHAR(255),
+    research_areas TEXT[],
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
 
--- 7. COMPANIES TABLE
-CREATE TABLE IF NOT EXISTS public.companies (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    name VARCHAR(255) UNIQUE NOT NULL,
-    industry VARCHAR(100),
-    website VARCHAR(255),
-    logo_url VARCHAR(500),
-    rating NUMERIC(2,1) DEFAULT 4.5,
-    location VARCHAR(255)
-);
-
--- 8. DEPARTMENTS TABLE
-CREATE TABLE IF NOT EXISTS public.departments (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    code VARCHAR(20) UNIQUE NOT NULL,
-    name VARCHAR(255) NOT NULL,
-    head VARCHAR(255),
-    total_students INT DEFAULT 0,
-    total_alumni INT DEFAULT 0
-);
-
--- 9. COUNTRIES TABLE
-CREATE TABLE IF NOT EXISTS public.countries (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    name VARCHAR(100) UNIQUE NOT NULL,
-    code VARCHAR(10) NOT NULL,
-    alumni_count INT DEFAULT 0,
-    lat NUMERIC(9,6),
-    lng NUMERIC(9,6)
-);
-
--- 10. JOBS TABLE
+-- 7. JOBS & INTERNSHIPS TABLE
 CREATE TABLE IF NOT EXISTS public.jobs (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    employer_id UUID REFERENCES public.users(id) ON DELETE SET NULL,
     title VARCHAR(255) NOT NULL,
-    description TEXT NOT NULL,
+    company VARCHAR(255) NOT NULL,
+    location VARCHAR(255) NOT NULL,
+    type VARCHAR(50) NOT NULL CHECK (type IN ('Full-Time', 'Part-Time', 'Remote', 'Internship')),
     salary VARCHAR(100),
-    company VARCHAR(255) NOT NULL,
-    location VARCHAR(255) NOT NULL,
-    deadline DATE,
-    type VARCHAR(50) CHECK (type IN ('Full-Time', 'Part-Time', 'Contract', 'Remote')),
-    posted_by UUID REFERENCES public.users(id) ON DELETE SET NULL,
-    status VARCHAR(20) DEFAULT 'active',
-    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
-);
-
--- 11. INTERNSHIPS TABLE
-CREATE TABLE IF NOT EXISTS public.internships (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    title VARCHAR(255) NOT NULL,
     description TEXT NOT NULL,
-    stipend VARCHAR(100),
-    duration VARCHAR(100),
-    deadline DATE,
-    company VARCHAR(255) NOT NULL,
-    location VARCHAR(255) NOT NULL,
-    posted_by UUID REFERENCES public.users(id) ON DELETE SET NULL,
-    status VARCHAR(20) DEFAULT 'active',
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
 
--- 12. APPLICATIONS TABLE
-CREATE TABLE IF NOT EXISTS public.applications (
+-- 8. JOB APPLICATIONS TABLE
+CREATE TABLE IF NOT EXISTS public.job_applications (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    student_id UUID REFERENCES public.users(id) ON DELETE CASCADE,
     job_id UUID REFERENCES public.jobs(id) ON DELETE CASCADE,
-    status VARCHAR(50) DEFAULT 'Pending' CHECK (status IN ('Pending', 'Reviewing', 'Shortlisted', 'Accepted', 'Rejected')),
-    resume VARCHAR(500),
+    student_id UUID REFERENCES public.users(id) ON DELETE CASCADE,
     cover_letter TEXT,
+    resume_url VARCHAR(500),
+    status VARCHAR(50) DEFAULT 'Pending' CHECK (status IN ('Pending', 'Reviewing', 'Shortlisted', 'Accepted', 'Rejected')),
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
 
--- 13. MENTORSHIP_REQUESTS TABLE
+-- 9. MENTORSHIP REQUESTS TABLE
 CREATE TABLE IF NOT EXISTS public.mentorship_requests (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     student_id UUID REFERENCES public.users(id) ON DELETE CASCADE,
     mentor_id UUID REFERENCES public.users(id) ON DELETE CASCADE,
-    status VARCHAR(50) DEFAULT 'Pending' CHECK (status IN ('Pending', 'Accepted', 'Rejected', 'Completed')),
     topic VARCHAR(255) NOT NULL,
-    message TEXT,
+    message TEXT NOT NULL,
+    status VARCHAR(50) DEFAULT 'Pending' CHECK (status IN ('Pending', 'Accepted', 'Rejected')),
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
 
--- 14. EVENTS TABLE
+-- 10. EVENTS & WEBINARS TABLE
 CREATE TABLE IF NOT EXISTS public.events (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     title VARCHAR(255) NOT NULL,
     description TEXT NOT NULL,
     event_date TIMESTAMP WITH TIME ZONE NOT NULL,
     location VARCHAR(255) NOT NULL,
+    category VARCHAR(50) NOT NULL CHECK (category IN ('Reunion', 'Workshop', 'Hackathon', 'Webinar')),
     image VARCHAR(500),
-    organizer VARCHAR(255),
-    category VARCHAR(100) DEFAULT 'Webinar',
-    created_by UUID REFERENCES public.users(id) ON DELETE SET NULL,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
 
--- 15. EVENT_REGISTRATIONS TABLE
+-- 11. EVENT REGISTRATIONS TABLE
 CREATE TABLE IF NOT EXISTS public.event_registrations (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     event_id UUID REFERENCES public.events(id) ON DELETE CASCADE,
     user_id UUID REFERENCES public.users(id) ON DELETE CASCADE,
-    status VARCHAR(50) DEFAULT 'Registered',
-    registered_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
     UNIQUE(event_id, user_id)
 );
 
--- 16. NOTIFICATIONS TABLE
-CREATE TABLE IF NOT EXISTS public.notifications (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    user_id UUID REFERENCES public.users(id) ON DELETE CASCADE,
-    title VARCHAR(255) NOT NULL,
-    message TEXT NOT NULL,
-    type VARCHAR(50) DEFAULT 'info',
-    is_read BOOLEAN DEFAULT false,
-    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
-);
-
--- 17. APPOINTMENTS TABLE
+-- 12. FACULTY APPOINTMENTS TABLE
 CREATE TABLE IF NOT EXISTS public.appointments (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     student_id UUID REFERENCES public.users(id) ON DELETE CASCADE,
     faculty_id UUID REFERENCES public.users(id) ON DELETE CASCADE,
     appointment_date TIMESTAMP WITH TIME ZONE NOT NULL,
     topic VARCHAR(255) NOT NULL,
-    status VARCHAR(50) DEFAULT 'Scheduled' CHECK (status IN ('Scheduled', 'Completed', 'Cancelled')),
+    status VARCHAR(50) DEFAULT 'Requested' CHECK (status IN ('Requested', 'Confirmed', 'Completed', 'Cancelled')),
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
 
--- 18. SKILLS TABLE
-CREATE TABLE IF NOT EXISTS public.skills (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    name VARCHAR(100) UNIQUE NOT NULL,
-    category VARCHAR(100) DEFAULT 'General'
-);
-
--- 19. ACHIEVEMENTS TABLE
-CREATE TABLE IF NOT EXISTS public.achievements (
+-- 13. NOTIFICATIONS TABLE
+CREATE TABLE IF NOT EXISTS public.notifications (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     user_id UUID REFERENCES public.users(id) ON DELETE CASCADE,
     title VARCHAR(255) NOT NULL,
-    description TEXT,
-    award_date DATE,
+    message TEXT NOT NULL,
+    is_read BOOLEAN DEFAULT false,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
 
--- 20. REPORTS TABLE
-CREATE TABLE IF NOT EXISTS public.reports (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    title VARCHAR(255) NOT NULL,
-    category VARCHAR(100) NOT NULL,
-    file_url VARCHAR(500),
-    generated_by UUID REFERENCES public.users(id) ON DELETE SET NULL,
-    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
-);
-
--- RLS POLICIES (Row Level Security)
+-- RLS Policies
 ALTER TABLE public.users ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.profiles ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.students ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.alumni ENABLE ROW LEVEL SECURITY;
-ALTER TABLE public.employers ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.jobs ENABLE ROW LEVEL SECURITY;
-ALTER TABLE public.internships ENABLE ROW LEVEL SECURITY;
-ALTER TABLE public.events ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.job_applications ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.mentorship_requests ENABLE ROW LEVEL SECURITY;
 
--- PUBLIC READ POLICIES
-CREATE POLICY "Public Read Profiles" ON public.profiles FOR SELECT USING (true);
-CREATE POLICY "Public Read Jobs" ON public.jobs FOR SELECT USING (true);
-CREATE POLICY "Public Read Internships" ON public.internships FOR SELECT USING (true);
-CREATE POLICY "Public Read Events" ON public.events FOR SELECT USING (true);
-CREATE POLICY "Public Read Alumni" ON public.alumni FOR SELECT USING (true);
+CREATE POLICY "Public Read Access to Profiles" ON public.profiles FOR SELECT USING (true);
+CREATE POLICY "Users Can Update Own Profile" ON public.profiles FOR UPDATE USING (auth.uid() = user_id);
+CREATE POLICY "Public Read Access to Jobs" ON public.jobs FOR SELECT USING (true);
 
+-- Enable Supabase Storage Bucket for Profile Pictures & CV Files
+INSERT INTO storage.buckets (id, name, public) 
+VALUES ('profile-pictures', 'profile-pictures', true)
+ON CONFLICT (id) DO NOTHING;
+
+CREATE POLICY "Public Storage Read Access" ON storage.objects 
+FOR SELECT USING (bucket_id = 'profile-pictures');
+
+CREATE POLICY "Authenticated User Storage Insert" ON storage.objects 
+FOR INSERT WITH CHECK (bucket_id = 'profile-pictures');

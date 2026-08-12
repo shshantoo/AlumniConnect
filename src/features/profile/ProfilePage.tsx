@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { 
-  Mail, Phone, GraduationCap, Edit3, Sparkles, MapPin, 
-  Globe, Briefcase, Award, Code, BookOpen, HeartHandshake, FileText, CheckCircle2 
+  Mail, Phone, GraduationCap, Edit3, MapPin, 
+  Briefcase, Award, Code, BookOpen, HeartHandshake, FileText, Camera, Upload 
 } from 'lucide-react';
 import { ProfileCompletionRing } from '../../components/profile/ProfileCompletionRing';
 import { CvBuilderModal } from './CvBuilderModal';
@@ -11,6 +11,17 @@ export const ProfilePage: React.FC = () => {
   const { currentUser, currentRole, profile, updateUserProfile } = useAuth();
   const [isCvBuilderOpen, setIsCvBuilderOpen] = useState(false);
   const [activeTab, setActiveTab] = useState<'overview' | 'experience' | 'education' | 'skills' | 'projects' | 'networking'>('overview');
+
+  const handleDirectPhotoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        updateUserProfile({ photo: reader.result as string });
+      };
+      reader.readAsDataURL(file);
+    }
+  };
 
   return (
     <div className="space-y-8 max-w-5xl mx-auto">
@@ -24,11 +35,20 @@ export const ProfilePage: React.FC = () => {
       {/* Profile Header Header Card */}
       <div className="taste-card p-6 sm:p-8 space-y-6 relative overflow-hidden">
         <div className="flex flex-col sm:flex-row items-center sm:items-start gap-6 relative z-10">
-          <img
-            src={profile?.photo || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=300&q=80'}
-            alt="Profile Avatar"
-            className="w-24 h-24 sm:w-28 sm:h-28 rounded-2xl object-cover ring-4 ring-[#ff5500]/20 shadow-md"
-          />
+          
+          {/* Avatar with Instant Photo Upload Overlay */}
+          <div className="relative group w-24 h-24 sm:w-28 sm:h-28 flex-shrink-0">
+            <img
+              src={profile?.photo || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=300&q=80'}
+              alt="Profile Avatar"
+              className="w-24 h-24 sm:w-28 sm:h-28 rounded-2xl object-cover ring-4 ring-[#ff5500]/20 shadow-md"
+            />
+            <label className="absolute inset-0 bg-black/60 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center cursor-pointer text-white text-[11px] font-bold gap-1 text-center p-1">
+              <Camera className="w-5 h-5 text-[#ff5500]" />
+              <span>Change Photo</span>
+              <input type="file" accept="image/*" onChange={handleDirectPhotoUpload} className="hidden" />
+            </label>
+          </div>
 
           <div className="space-y-2 text-center sm:text-left flex-1">
             <div className="flex flex-col sm:flex-row items-center justify-between gap-2">
@@ -39,12 +59,18 @@ export const ProfilePage: React.FC = () => {
                 </p>
               </div>
 
-              <button
-                onClick={() => setIsCvBuilderOpen(true)}
-                className="btn-black px-4 py-2 text-xs font-bold flex items-center gap-1.5 shadow-sm"
-              >
-                <Edit3 className="w-4 h-4 text-[#ff5500]" /> Edit 18-Section CV
-              </button>
+              <div className="flex items-center gap-2">
+                <label className="btn-white px-3.5 py-2 text-xs font-semibold cursor-pointer inline-flex items-center gap-1.5 shadow-xs">
+                  <Upload className="w-3.5 h-3.5 text-[#ff5500]" /> Upload Photo
+                  <input type="file" accept="image/*" onChange={handleDirectPhotoUpload} className="hidden" />
+                </label>
+                <button
+                  onClick={() => setIsCvBuilderOpen(true)}
+                  className="btn-black px-4 py-2 text-xs font-bold flex items-center gap-1.5 shadow-sm"
+                >
+                  <Edit3 className="w-4 h-4 text-[#ff5500]" /> Edit 18-Section CV
+                </button>
+              </div>
             </div>
 
             <p className="text-xs text-zinc-600 max-w-2xl leading-relaxed">
