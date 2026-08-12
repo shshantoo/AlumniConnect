@@ -71,8 +71,8 @@ export const ProfilePage: React.FC = () => {
             </label>
           </div>
 
-          <div className="space-y-2 text-center sm:text-left flex-1">
-            <div className="flex flex-col sm:flex-row items-center justify-between gap-2">
+          <div className="space-y-3 text-center sm:text-left flex-1">
+            <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
               <div>
                 <h1 className="text-2xl font-extrabold text-[#0a0a0a]">{profile?.full_name || 'User Profile'}</h1>
                 <p className="text-xs text-[#ff5500] font-bold capitalize flex items-center justify-center sm:justify-start gap-1.5 mt-0.5">
@@ -80,13 +80,20 @@ export const ProfilePage: React.FC = () => {
                 </p>
               </div>
 
-              {/* ACTION BUTTONS: Live CV Preview, Download PDF, Share */}
-              <div className="flex flex-wrap items-center gap-2 justify-center sm:justify-end">
+              {/* ACTION BUTTONS GROUP */}
+              <div className="flex flex-wrap items-center gap-2 justify-center sm:justify-start lg:justify-end">
                 <button
-                  onClick={() => setIsPdfPreviewOpen(true)}
+                  onClick={() => setIsCvBuilderOpen(true)}
                   className="btn-black px-4 py-2 text-xs font-bold flex items-center gap-1.5 shadow-md"
                 >
-                  <FileText className="w-4 h-4 text-[#ff5500]" /> Live CV Preview & Templates
+                  <Edit3 className="w-4 h-4 text-[#ff5500]" /> Launch CV Builder
+                </button>
+
+                <button
+                  onClick={() => setIsPdfPreviewOpen(true)}
+                  className="btn-white px-3.5 py-2 text-xs font-semibold flex items-center gap-1.5 shadow-xs"
+                >
+                  <FileText className="w-3.5 h-3.5 text-[#ff5500]" /> CV Templates & PDF
                 </button>
 
                 <button
@@ -94,25 +101,30 @@ export const ProfilePage: React.FC = () => {
                   disabled={isDownloadingPdf}
                   className="btn-white px-3.5 py-2 text-xs font-semibold flex items-center gap-1.5 shadow-xs disabled:opacity-50"
                 >
-                  <Download className="w-3.5 h-3.5 text-[#ff5500]" /> {isDownloadingPdf ? 'Generating...' : 'Download PDF'}
+                  <Download className="w-3.5 h-3.5 text-emerald-600" /> {isDownloadingPdf ? 'Generating...' : 'Download PDF'}
                 </button>
+
+                <label className="btn-white px-3 py-2 text-xs font-semibold cursor-pointer inline-flex items-center gap-1 shadow-xs">
+                  <Upload className="w-3.5 h-3.5 text-zinc-600" /> Photo
+                  <input type="file" accept="image/*" onChange={handleDirectPhotoUpload} className="hidden" />
+                </label>
 
                 <button
                   onClick={handleShareProfile}
-                  className="btn-white px-3 py-2 text-xs font-semibold flex items-center gap-1.5 shadow-xs"
+                  className="btn-white px-3 py-2 text-xs font-semibold flex items-center gap-1 shadow-xs"
                   title="Share Public Profile Link"
                 >
                   {copiedShare ? <Check className="w-3.5 h-3.5 text-emerald-600" /> : <Share2 className="w-3.5 h-3.5 text-zinc-700" />}
-                  {copiedShare ? 'Copied Link' : 'Share'}
+                  {copiedShare ? 'Copied' : 'Share'}
                 </button>
               </div>
             </div>
 
             <p className="text-xs text-zinc-600 max-w-2xl leading-relaxed">
-              {profile?.professional_summary || profile?.bio || 'No professional summary added yet. Click Edit CV to generate an AI summary!'}
+              {profile?.professional_summary || profile?.bio || 'No professional summary added yet. Click Launch CV Builder to auto-generate an AI summary!'}
             </p>
 
-            <div className="flex flex-wrap items-center justify-center sm:justify-start gap-4 text-xs text-zinc-600 pt-2 font-medium">
+            <div className="flex flex-wrap items-center justify-center sm:justify-start gap-4 text-xs text-zinc-600 pt-1 font-medium">
               <span className="flex items-center gap-1.5"><Mail className="w-3.5 h-3.5 text-[#ff5500]" /> {profile?.email || currentUser?.email}</span>
               <span className="flex items-center gap-1.5"><Phone className="w-3.5 h-3.5 text-emerald-600" /> {profile?.phone || 'Not provided'}</span>
               <span className="flex items-center gap-1.5"><MapPin className="w-3.5 h-3.5 text-[#ff5500]" /> {profile?.location || 'Dhaka'}, {profile?.country || 'Bangladesh'}</span>
@@ -141,10 +153,10 @@ export const ProfilePage: React.FC = () => {
         </div>
       </div>
 
-      {/* Tabbed Profile Overview */}
+      {/* Tabbed Profile Overview (CLEAN FULL-WIDTH TAB BAR WITHOUT BUTTON OVERLAP) */}
       <div className="taste-card p-6 space-y-6">
-        <div className="flex items-center justify-between border-b border-zinc-200 pb-3">
-          <div className="flex items-center gap-2 overflow-x-auto scrollbar-none">
+        <div className="border-b border-zinc-200 pb-3">
+          <div className="flex items-center gap-2 overflow-x-auto scrollbar-none py-1">
             {[
               { id: 'overview', label: 'Overview', icon: FileText },
               { id: 'experience', label: 'Experience', icon: Briefcase },
@@ -159,7 +171,7 @@ export const ProfilePage: React.FC = () => {
                 <button
                   key={tab.id}
                   onClick={() => setActiveTab(tab.id as any)}
-                  className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-bold transition whitespace-nowrap ${
+                  className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition whitespace-nowrap ${
                     isActive
                       ? 'bg-[#0a0a0a] text-white shadow-sm'
                       : 'bg-[#f8f6f0] text-zinc-700 hover:bg-[#f0ede6] border border-[#e5e0d5]'
@@ -171,13 +183,6 @@ export const ProfilePage: React.FC = () => {
               );
             })}
           </div>
-
-          <button
-            onClick={() => setIsCvBuilderOpen(true)}
-            className="btn-black px-4 py-2 text-xs flex items-center gap-1.5 font-bold shadow-xs whitespace-nowrap"
-          >
-            <Edit3 className="w-3.5 h-3.5 text-[#ff5500]" /> Launch Builder
-          </button>
         </div>
 
         {/* Tab Content */}
@@ -186,14 +191,14 @@ export const ProfilePage: React.FC = () => {
             <div className="space-y-4 animate-fadeIn">
               <div>
                 <h4 className="font-extrabold text-[#0a0a0a] text-sm mb-1">Career Objective</h4>
-                <p className="text-zinc-700 leading-relaxed bg-[#f8f6f0] p-3 rounded-xl border border-[#e5e0d5]">
+                <p className="text-zinc-700 leading-relaxed bg-[#f8f6f0] p-3.5 rounded-xl border border-[#e5e0d5]">
                   {profile?.career_objective || 'Not specified. Complete your CV profile to add career objective.'}
                 </p>
               </div>
 
               <div>
                 <h4 className="font-extrabold text-[#0a0a0a] text-sm mb-1">Senior Thesis & Supervisor</h4>
-                <div className="bg-[#f8f6f0] p-3 rounded-xl border border-[#e5e0d5] space-y-1">
+                <div className="bg-[#f8f6f0] p-3.5 rounded-xl border border-[#e5e0d5] space-y-1">
                   <p className="font-bold text-[#ff5500]">{profile?.thesis_project || 'Distributed Cloud Systems & AI'}</p>
                   <p className="text-zinc-500">Supervisor: {profile?.thesis_supervisor || 'Prof. Alan Turing Jr.'}</p>
                 </div>
