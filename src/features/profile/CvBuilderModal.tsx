@@ -7,9 +7,10 @@ import {
   X, Check, Plus, Trash2, Sparkles, ArrowLeft, 
   ArrowRight, Printer, User, GraduationCap, 
   Briefcase, Code, Award, BookOpen, HeartHandshake, FileText,
-  Camera, Upload, Image as ImageIcon, Download
+  Camera, Upload, Download
 } from 'lucide-react';
 import { generateCvPdf } from '../../utils/generatePdf';
+import { CvTemplateEngine, CvTemplateType } from '../../components/profile/CvTemplateEngine';
 
 interface CvBuilderModalProps {
   initialProfile: Partial<UserProfile> | null;
@@ -25,7 +26,9 @@ export const CvBuilderModal: React.FC<CvBuilderModalProps> = ({
   onSaveProfile
 }) => {
   const [currentStep, setCurrentStep] = useState(1);
+  const [selectedTemplate, setSelectedTemplate] = useState<CvTemplateType>('modern');
   const [isGeneratingAi, setIsGeneratingAi] = useState(false);
+  const [isDownloadingPdf, setIsDownloadingPdf] = useState(false);
 
   // Form State
   const [formData, setFormData] = useState<Partial<UserProfile>>({
@@ -152,6 +155,13 @@ export const CvBuilderModal: React.FC<CvBuilderModalProps> = ({
       };
       reader.readAsDataURL(file);
     }
+  };
+
+  const handleDownloadPdf = async () => {
+    setIsDownloadingPdf(true);
+    const filename = `${(formData.full_name || 'AlumniConnect').replace(/\s+/g, '_')}_CV_${selectedTemplate.toUpperCase()}.pdf`;
+    await generateCvPdf('cv-modal-printable-document', filename);
+    setIsDownloadingPdf(false);
   };
 
   // Handle Dynamic Array Field Updates
@@ -942,97 +952,67 @@ export const CvBuilderModal: React.FC<CvBuilderModalProps> = ({
           {/* STEP 9: Printable CV Preview & Template Export */}
           {currentStep === 9 && (
             <div className="space-y-4 animate-fadeIn">
-              <div className="flex items-center justify-between border-b border-zinc-200 pb-3">
+              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between border-b border-zinc-200 pb-3 gap-3">
                 <div>
-                  <h3 className="text-base font-extrabold text-[#0a0a0a]">Step 9: Professional CV Document Preview</h3>
-                  <p className="text-xs text-zinc-500">Live printable template generated directly from your profile data.</p>
+                  <h3 className="text-base font-extrabold text-[#0a0a0a]">Step 9: Professional Multi-Template CV Document Preview</h3>
+                  <p className="text-xs text-zinc-500">Choose from 4 ATS-friendly templates & auto-generate A4 PDF files.</p>
                 </div>
+
                 <div className="flex items-center gap-2">
                   <button
                     type="button"
-                    onClick={async () => {
-                      await generateCvPdf('cv-modal-printable-document', `${(formData.full_name || 'AlumniConnect').replace(/\s+/g, '_')}_CV.pdf`);
-                    }}
-                    className="btn-black px-4 py-2 text-xs flex items-center gap-1.5 shadow-sm"
+                    onClick={handleDownloadPdf}
+                    disabled={isDownloadingPdf}
+                    className="btn-black px-4 py-2 text-xs flex items-center gap-1.5 shadow-sm disabled:opacity-60"
                   >
-                    <Download className="w-3.5 h-3.5 text-[#ff5500]" /> Download Professional CV PDF
+                    <Download className="w-3.5 h-3.5 text-[#ff5500]" />
+                    {isDownloadingPdf ? 'Generating PDF File...' : 'Download PDF File'}
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => window.print()}
+                    className="btn-white px-3 py-2 text-xs flex items-center gap-1"
+                  >
+                    <Printer className="w-3.5 h-3.5 text-zinc-700" /> Print
                   </button>
                 </div>
               </div>
 
-              {/* CV Document Box */}
-              <div id="cv-modal-printable-document" className="bg-white border border-zinc-300 rounded-2xl p-8 space-y-6 shadow-md text-zinc-900 font-sans print:shadow-none print:border-none">
-                {/* CV Header */}
-                <div className="border-b border-zinc-900 pb-4 flex justify-between items-start">
-                  <div className="flex items-center gap-4">
-                    <img
-                      src={formData.photo || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=300&q=80'}
-                      alt="CV Avatar"
-                      className="w-16 h-16 rounded-xl object-cover ring-1 ring-zinc-300"
-                    />
-                    <div>
-                      <h1 className="text-2xl font-extrabold text-zinc-950 uppercase tracking-tight">{formData.full_name || 'Your Full Name'}</h1>
-                      <p className="text-sm text-[#ff5500] font-bold">{formData.headline || 'Software Engineer'}</p>
-                      <p className="text-xs text-zinc-600 mt-1">{formData.email} • {formData.phone} • {formData.location}, {formData.country}</p>
-                    </div>
-                  </div>
-                  {formData.linkedin && (
-                    <span className="text-[11px] font-mono text-zinc-500">{formData.linkedin}</span>
-                  )}
+              {/* Template Switcher Bar */}
+              <div className="bg-[#f8f6f0] p-2.5 rounded-xl border border-[#e5e0d5] flex items-center justify-between gap-3">
+                <span className="text-xs font-bold text-zinc-950">Select Template:</span>
+                <div className="flex items-center gap-1.5 overflow-x-auto scrollbar-none">
+                  {[
+                    { id: 'classic', label: '1. Classic ATS' },
+                    { id: 'modern', label: '2. Modern Accent' },
+                    { id: 'academic', label: '3. Academic / Research' },
+                    { id: 'creative', label: '4. Creative / Portfolio' },
+                  ].map(tmpl => (
+                    <button
+                      key={tmpl.id}
+                      onClick={() => setSelectedTemplate(tmpl.id as CvTemplateType)}
+                      className={`px-3 py-1 rounded-lg font-bold text-xs transition ${
+                        selectedTemplate === tmpl.id
+                          ? 'bg-[#0a0a0a] text-white shadow-xs'
+                          : 'bg-white text-zinc-700 hover:bg-zinc-100 border border-[#e5e0d5]'
+                      }`}
+                    >
+                      {tmpl.label}
+                    </button>
+                  ))}
                 </div>
+              </div>
 
-                {/* Summary */}
-                {formData.professional_summary && (
-                  <div className="space-y-1">
-                    <h3 className="text-xs font-bold uppercase tracking-wider text-zinc-950 border-b border-zinc-200 pb-0.5">Professional Summary</h3>
-                    <p className="text-xs leading-relaxed text-zinc-700">{formData.professional_summary}</p>
-                  </div>
-                )}
-
-                {/* Education */}
-                {formData.education_history && formData.education_history.length > 0 && (
-                  <div className="space-y-2">
-                    <h3 className="text-xs font-bold uppercase tracking-wider text-zinc-950 border-b border-zinc-200 pb-0.5">Education</h3>
-                    {formData.education_history.map(edu => (
-                      <div key={edu.id} className="flex justify-between text-xs">
-                        <div>
-                          <strong className="text-zinc-950">{edu.degree}</strong> — <span className="text-zinc-700">{edu.institution}</span>
-                        </div>
-                        <span className="text-zinc-500 font-mono">{edu.start_year} – {edu.end_year}</span>
-                      </div>
-                    ))}
-                  </div>
-                )}
-
-                {/* Experience */}
-                {formData.work_experience && formData.work_experience.length > 0 && (
-                  <div className="space-y-2">
-                    <h3 className="text-xs font-bold uppercase tracking-wider text-zinc-950 border-b border-zinc-200 pb-0.5">Work Experience</h3>
-                    {formData.work_experience.map(work => (
-                      <div key={work.id} className="space-y-0.5 text-xs">
-                        <div className="flex justify-between font-bold text-zinc-950">
-                          <span>{work.title} @ {work.company}</span>
-                          <span className="text-zinc-500 font-mono text-[11px]">{work.start_date} – {work.is_current ? 'Present' : work.end_date}</span>
-                        </div>
-                        <p className="text-zinc-700 text-[11px]">{work.responsibilities}</p>
-                      </div>
-                    ))}
-                  </div>
-                )}
-
-                {/* Skills */}
-                {formData.skills_categorized && formData.skills_categorized.length > 0 && (
-                  <div className="space-y-1">
-                    <h3 className="text-xs font-bold uppercase tracking-wider text-zinc-950 border-b border-zinc-200 pb-0.5">Key Skills</h3>
-                    <div className="flex flex-wrap gap-1.5 text-xs">
-                      {formData.skills_categorized.map(skl => (
-                        <span key={skl.id} className="px-2 py-0.5 rounded bg-zinc-100 border border-zinc-200 text-zinc-800 text-[11px] font-medium">
-                          {skl.name} ({skl.level})
-                        </span>
-                      ))}
-                    </div>
-                  </div>
-                )}
+              {/* CV TEMPLATE ENGINE RENDERER */}
+              <div className="bg-[#f0ede6] p-4 sm:p-6 rounded-2xl border border-[#e5e0d5] flex justify-center">
+                <CvTemplateEngine
+                  profile={formData}
+                  template={selectedTemplate}
+                  elementId="cv-modal-printable-document"
+                  showPhoto={true}
+                  showReferences={true}
+                />
               </div>
             </div>
           )}

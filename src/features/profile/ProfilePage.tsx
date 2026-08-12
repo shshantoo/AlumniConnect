@@ -2,18 +2,21 @@ import React, { useState } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { 
   Mail, Phone, GraduationCap, Edit3, MapPin, 
-  Briefcase, Award, Code, BookOpen, HeartHandshake, FileText, Camera, Upload, Download, Printer, X, Sparkles, Check 
+  Briefcase, Award, Code, BookOpen, HeartHandshake, FileText, Camera, Upload, Download, Printer, X, Share2, Check 
 } from 'lucide-react';
 import { ProfileCompletionRing } from '../../components/profile/ProfileCompletionRing';
 import { CvBuilderModal } from './CvBuilderModal';
 import { uploadProfilePictureToSupabase } from '../../utils/supabase';
 import { generateCvPdf } from '../../utils/generatePdf';
+import { CvTemplateEngine, CvTemplateType } from '../../components/profile/CvTemplateEngine';
 
 export const ProfilePage: React.FC = () => {
   const { currentUser, currentRole, profile, updateUserProfile } = useAuth();
   const [isCvBuilderOpen, setIsCvBuilderOpen] = useState(false);
   const [isPdfPreviewOpen, setIsPdfPreviewOpen] = useState(false);
+  const [selectedTemplate, setSelectedTemplate] = useState<CvTemplateType>('modern');
   const [isDownloadingPdf, setIsDownloadingPdf] = useState(false);
+  const [copiedShare, setCopiedShare] = useState(false);
   const [activeTab, setActiveTab] = useState<'overview' | 'experience' | 'education' | 'skills' | 'projects' | 'networking'>('overview');
 
   const handleDirectPhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -26,14 +29,19 @@ export const ProfilePage: React.FC = () => {
 
   const handleTriggerPdfDownload = async () => {
     setIsDownloadingPdf(true);
-    // Ensure document preview modal is rendered if not open
     if (!isPdfPreviewOpen) {
       setIsPdfPreviewOpen(true);
       await new Promise(r => setTimeout(r, 400));
     }
-    const filename = `${(profile?.full_name || 'AlumniConnect').replace(/\s+/g, '_')}_CV.pdf`;
-    await generateCvPdf('cv-printable-document', filename);
+    const filename = `${(profile?.full_name || 'AlumniConnect').replace(/\s+/g, '_')}_CV_${selectedTemplate.toUpperCase()}.pdf`;
+    await generateCvPdf('cv-live-document-template', filename);
     setIsDownloadingPdf(false);
+  };
+
+  const handleShareProfile = () => {
+    navigator.clipboard.writeText(window.location.href);
+    setCopiedShare(true);
+    setTimeout(() => setCopiedShare(false), 2000);
   };
 
   return (
@@ -72,27 +80,30 @@ export const ProfilePage: React.FC = () => {
                 </p>
               </div>
 
-              {/* DIRECT PDF GENERATOR DOWNLOAD BUTTON */}
+              {/* ACTION BUTTONS: Live CV Preview, Download PDF, Share */}
               <div className="flex flex-wrap items-center gap-2 justify-center sm:justify-end">
+                <button
+                  onClick={() => setIsPdfPreviewOpen(true)}
+                  className="btn-black px-4 py-2 text-xs font-bold flex items-center gap-1.5 shadow-md"
+                >
+                  <FileText className="w-4 h-4 text-[#ff5500]" /> Live CV Preview & Templates
+                </button>
+
                 <button
                   onClick={handleTriggerPdfDownload}
                   disabled={isDownloadingPdf}
-                  className="btn-black px-4 py-2 text-xs font-bold flex items-center gap-2 shadow-md disabled:opacity-60"
+                  className="btn-white px-3.5 py-2 text-xs font-semibold flex items-center gap-1.5 shadow-xs disabled:opacity-50"
                 >
-                  <Download className="w-4 h-4 text-[#ff5500]" />
-                  {isDownloadingPdf ? 'Generating PDF...' : 'Download CV (PDF)'}
+                  <Download className="w-3.5 h-3.5 text-[#ff5500]" /> {isDownloadingPdf ? 'Generating...' : 'Download PDF'}
                 </button>
 
-                <label className="btn-white px-3.5 py-2 text-xs font-semibold cursor-pointer inline-flex items-center gap-1.5 shadow-xs">
-                  <Upload className="w-3.5 h-3.5 text-[#ff5500]" /> Upload Photo
-                  <input type="file" accept="image/*" onChange={handleDirectPhotoUpload} className="hidden" />
-                </label>
-
                 <button
-                  onClick={() => setIsCvBuilderOpen(true)}
-                  className="btn-white px-3.5 py-2 text-xs font-semibold flex items-center gap-1.5 shadow-xs"
+                  onClick={handleShareProfile}
+                  className="btn-white px-3 py-2 text-xs font-semibold flex items-center gap-1.5 shadow-xs"
+                  title="Share Public Profile Link"
                 >
-                  <Edit3 className="w-3.5 h-3.5 text-zinc-700" /> Edit 18-Section CV
+                  {copiedShare ? <Check className="w-3.5 h-3.5 text-emerald-600" /> : <Share2 className="w-3.5 h-3.5 text-zinc-700" />}
+                  {copiedShare ? 'Copied Link' : 'Share'}
                 </button>
               </div>
             </div>
@@ -132,32 +143,41 @@ export const ProfilePage: React.FC = () => {
 
       {/* Tabbed Profile Overview */}
       <div className="taste-card p-6 space-y-6">
-        <div className="flex items-center gap-2 border-b border-zinc-200 pb-3 overflow-x-auto scrollbar-none">
-          {[
-            { id: 'overview', label: 'Overview', icon: FileText },
-            { id: 'experience', label: 'Experience', icon: Briefcase },
-            { id: 'education', label: 'Education', icon: BookOpen },
-            { id: 'skills', label: 'Skills & Levels', icon: Code },
-            { id: 'projects', label: 'Projects & Certs', icon: Award },
-            { id: 'networking', label: 'Alumni Networking', icon: HeartHandshake },
-          ].map(tab => {
-            const Icon = tab.icon;
-            const isActive = activeTab === tab.id;
-            return (
-              <button
-                key={tab.id}
-                onClick={() => setActiveTab(tab.id as any)}
-                className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-bold transition whitespace-nowrap ${
-                  isActive
-                    ? 'bg-[#0a0a0a] text-white shadow-sm'
-                    : 'bg-[#f8f6f0] text-zinc-700 hover:bg-[#f0ede6] border border-[#e5e0d5]'
-                }`}
-              >
-                <Icon className={`w-3.5 h-3.5 ${isActive ? 'text-[#ff5500]' : 'text-zinc-500'}`} />
-                {tab.label}
-              </button>
-            );
-          })}
+        <div className="flex items-center justify-between border-b border-zinc-200 pb-3">
+          <div className="flex items-center gap-2 overflow-x-auto scrollbar-none">
+            {[
+              { id: 'overview', label: 'Overview', icon: FileText },
+              { id: 'experience', label: 'Experience', icon: Briefcase },
+              { id: 'education', label: 'Education', icon: BookOpen },
+              { id: 'skills', label: 'Skills & Levels', icon: Code },
+              { id: 'projects', label: 'Projects & Certs', icon: Award },
+              { id: 'networking', label: 'Alumni Networking', icon: HeartHandshake },
+            ].map(tab => {
+              const Icon = tab.icon;
+              const isActive = activeTab === tab.id;
+              return (
+                <button
+                  key={tab.id}
+                  onClick={() => setActiveTab(tab.id as any)}
+                  className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-bold transition whitespace-nowrap ${
+                    isActive
+                      ? 'bg-[#0a0a0a] text-white shadow-sm'
+                      : 'bg-[#f8f6f0] text-zinc-700 hover:bg-[#f0ede6] border border-[#e5e0d5]'
+                  }`}
+                >
+                  <Icon className={`w-3.5 h-3.5 ${isActive ? 'text-[#ff5500]' : 'text-zinc-500'}`} />
+                  {tab.label}
+                </button>
+              );
+            })}
+          </div>
+
+          <button
+            onClick={() => setIsCvBuilderOpen(true)}
+            className="btn-black px-4 py-2 text-xs flex items-center gap-1.5 font-bold shadow-xs whitespace-nowrap"
+          >
+            <Edit3 className="w-3.5 h-3.5 text-[#ff5500]" /> Launch Builder
+          </button>
         </div>
 
         {/* Tab Content */}
@@ -225,24 +245,24 @@ export const ProfilePage: React.FC = () => {
         </div>
       </div>
 
-      {/* PROFESSIONAL EXECUTIVE CV TEMPLATE MODAL FOR DIRECT PDF DOWNLOAD */}
+      {/* LIVE MULTI-TEMPLATE CV PREVIEW MODAL */}
       {isPdfPreviewOpen && (
         <div className="fixed inset-0 bg-zinc-950/60 backdrop-blur-md z-50 flex items-center justify-center p-3 sm:p-6 overflow-y-auto">
-          <div className="bg-white border border-[#e5e0d5] rounded-3xl w-full max-w-4xl my-auto shadow-2xl flex flex-col max-h-[92vh] overflow-hidden animate-scaleUp">
+          <div className="bg-white border border-[#e5e0d5] rounded-3xl w-full max-w-5xl my-auto shadow-2xl flex flex-col max-h-[92vh] overflow-hidden animate-scaleUp">
             
-            {/* Modal Header */}
-            <div className="bg-[#f8f6f0] border-b border-[#e5e0d5] px-6 py-4 flex items-center justify-between">
+            {/* Modal Top Bar */}
+            <div className="bg-[#f8f6f0] border-b border-[#e5e0d5] px-6 py-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
               <div className="flex items-center gap-3">
                 <div className="w-9 h-9 rounded-xl bg-[#0a0a0a] text-white flex items-center justify-center font-bold">
-                  <Download className="w-5 h-5 text-[#ff5500]" />
+                  <FileText className="w-5 h-5 text-[#ff5500]" />
                 </div>
                 <div>
-                  <h3 className="text-base font-extrabold text-[#0a0a0a]">Professional Executive CV Document</h3>
-                  <p className="text-xs text-zinc-500">Auto-generates clean A4 PDF file directly to your downloads.</p>
+                  <h3 className="text-base font-extrabold text-[#0a0a0a]">Interactive Live CV Preview & Templates</h3>
+                  <p className="text-xs text-zinc-500">Choose from 4 ATS-friendly templates & auto-generate A4 PDF files.</p>
                 </div>
               </div>
 
-              <div className="flex items-center gap-3">
+              <div className="flex items-center gap-2">
                 <button
                   type="button"
                   onClick={handleTriggerPdfDownload}
@@ -250,8 +270,17 @@ export const ProfilePage: React.FC = () => {
                   className="btn-black px-4 py-2 text-xs font-bold flex items-center gap-1.5 shadow-md disabled:opacity-60"
                 >
                   <Download className="w-4 h-4 text-[#ff5500]" />
-                  {isDownloadingPdf ? 'Generating PDF File...' : 'Download PDF File'}
+                  {isDownloadingPdf ? 'Generating PDF...' : 'Download PDF File'}
                 </button>
+
+                <button
+                  type="button"
+                  onClick={() => window.print()}
+                  className="btn-white px-3 py-2 text-xs font-semibold flex items-center gap-1"
+                >
+                  <Printer className="w-3.5 h-3.5 text-zinc-700" /> Print
+                </button>
+
                 <button
                   onClick={() => setIsPdfPreviewOpen(false)}
                   className="p-2 rounded-xl bg-white border border-[#e5e0d5] hover:bg-zinc-100 text-zinc-700 transition"
@@ -261,99 +290,42 @@ export const ProfilePage: React.FC = () => {
               </div>
             </div>
 
-            {/* DOCUMENT CANVASS TARGET FOR HTML2CANVAS + JSPDF GENERATION */}
-            <div className="p-8 overflow-y-auto flex-1 bg-white text-zinc-900 font-sans space-y-6">
-              <div
-                id="cv-printable-document"
-                className="bg-white p-8 space-y-6 max-w-3xl mx-auto border border-zinc-200 rounded-xl shadow-xs"
-              >
-                {/* Professional CV Header with Profile Picture */}
-                <div className="border-b-2 border-zinc-950 pb-5 flex justify-between items-start">
-                  <div className="flex items-center gap-5">
-                    <img
-                      src={profile?.photo || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=300&q=80'}
-                      alt="CV Profile Avatar"
-                      crossOrigin="anonymous"
-                      className="w-20 h-20 rounded-2xl object-cover ring-2 ring-zinc-400 shadow-xs flex-shrink-0"
-                    />
-                    <div className="space-y-1">
-                      <h1 className="text-2xl font-extrabold text-zinc-950 uppercase tracking-tight">{profile?.full_name || 'Your Full Name'}</h1>
-                      <p className="text-sm text-[#ff5500] font-bold">{profile?.headline || 'Software Engineer'}</p>
-                      <p className="text-xs text-zinc-600 mt-1">{profile?.email} • {profile?.phone} • {profile?.location}, {profile?.country}</p>
-                    </div>
-                  </div>
-                  {profile?.linkedin && (
-                    <span className="text-[11px] font-mono text-zinc-500 hidden sm:inline">{profile.linkedin}</span>
-                  )}
-                </div>
-
-                {/* Professional Summary */}
-                {profile?.professional_summary && (
-                  <div className="space-y-1">
-                    <h3 className="text-xs font-bold uppercase tracking-wider text-zinc-950 border-b border-zinc-300 pb-0.5">Professional Executive Summary</h3>
-                    <p className="text-xs leading-relaxed text-zinc-700">{profile.professional_summary}</p>
-                  </div>
-                )}
-
-                {/* Education History */}
-                {profile?.education_history && profile.education_history.length > 0 && (
-                  <div className="space-y-2">
-                    <h3 className="text-xs font-bold uppercase tracking-wider text-zinc-950 border-b border-zinc-300 pb-0.5">Education History</h3>
-                    {profile.education_history.map(edu => (
-                      <div key={edu.id} className="flex justify-between text-xs">
-                        <div>
-                          <strong className="text-zinc-950">{edu.degree}</strong> — <span className="text-zinc-700">{edu.institution}</span>
-                        </div>
-                        <span className="text-zinc-500 font-mono">{edu.start_year} – {edu.end_year}</span>
-                      </div>
-                    ))}
-                  </div>
-                )}
-
-                {/* Work Experience */}
-                {profile?.work_experience && profile.work_experience.length > 0 && (
-                  <div className="space-y-2">
-                    <h3 className="text-xs font-bold uppercase tracking-wider text-zinc-950 border-b border-zinc-300 pb-0.5">Work Experience</h3>
-                    {profile.work_experience.map(work => (
-                      <div key={work.id} className="space-y-0.5 text-xs">
-                        <div className="flex justify-between font-bold text-zinc-950">
-                          <span>{work.title} @ {work.company}</span>
-                          <span className="text-zinc-500 font-mono text-[11px]">{work.start_date} – {work.is_current ? 'Present' : work.end_date}</span>
-                        </div>
-                        <p className="text-zinc-700 text-[11px]">{work.responsibilities}</p>
-                      </div>
-                    ))}
-                  </div>
-                )}
-
-                {/* Skills */}
-                {profile?.skills_categorized && profile.skills_categorized.length > 0 && (
-                  <div className="space-y-1">
-                    <h3 className="text-xs font-bold uppercase tracking-wider text-zinc-950 border-b border-zinc-300 pb-0.5">Categorized Skills</h3>
-                    <div className="flex flex-wrap gap-1.5 text-xs pt-1">
-                      {profile.skills_categorized.map(skl => (
-                        <span key={skl.id} className="px-2 py-0.5 rounded bg-zinc-100 border border-zinc-200 text-zinc-800 text-[11px] font-medium">
-                          {skl.name} ({skl.level})
-                        </span>
-                      ))}
-                    </div>
-                  </div>
-                )}
-
-                {/* Projects */}
-                {profile?.projects_list && profile.projects_list.length > 0 && (
-                  <div className="space-y-2">
-                    <h3 className="text-xs font-bold uppercase tracking-wider text-zinc-950 border-b border-zinc-300 pb-0.5">Key Projects</h3>
-                    {profile.projects_list.map(prj => (
-                      <div key={prj.id} className="text-xs space-y-0.5">
-                        <p className="font-bold text-zinc-950">{prj.name} <span className="text-zinc-500 font-normal">({prj.tag})</span></p>
-                        <p className="text-zinc-700 text-[11px]">{prj.description}</p>
-                      </div>
-                    ))}
-                  </div>
-                )}
+            {/* Template Selector Bar */}
+            <div className="bg-white border-b border-[#e5e0d5] px-6 py-3 flex items-center justify-between gap-4">
+              <span className="text-xs font-bold text-zinc-950">Select CV Design Template:</span>
+              <div className="flex items-center gap-2 overflow-x-auto scrollbar-none">
+                {[
+                  { id: 'classic', label: '1. Classic ATS' },
+                  { id: 'modern', label: '2. Modern Accent' },
+                  { id: 'academic', label: '3. Academic / Research' },
+                  { id: 'creative', label: '4. Creative / Portfolio' },
+                ].map(tmpl => (
+                  <button
+                    key={tmpl.id}
+                    onClick={() => setSelectedTemplate(tmpl.id as CvTemplateType)}
+                    className={`px-3.5 py-1.5 rounded-xl font-bold text-xs transition ${
+                      selectedTemplate === tmpl.id
+                        ? 'bg-[#0a0a0a] text-white shadow-xs'
+                        : 'bg-[#f8f6f0] text-zinc-700 hover:bg-[#f0ede6] border border-[#e5e0d5]'
+                    }`}
+                  >
+                    {tmpl.label}
+                  </button>
+                ))}
               </div>
             </div>
+
+            {/* LIVE DOCUMENT TEMPLATE ENGINE RENDERER */}
+            <div className="p-6 overflow-y-auto flex-1 bg-[#f0ede6] flex justify-center">
+              <CvTemplateEngine
+                profile={profile}
+                template={selectedTemplate}
+                elementId="cv-live-document-template"
+                showPhoto={true}
+                showReferences={true}
+              />
+            </div>
+
           </div>
         </div>
       )}
