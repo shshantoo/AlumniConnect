@@ -7,8 +7,9 @@ import {
   X, Check, Plus, Trash2, Sparkles, ArrowLeft, 
   ArrowRight, Printer, User, GraduationCap, 
   Briefcase, Code, Award, BookOpen, HeartHandshake, FileText,
-  Camera, Upload, Image as ImageIcon
+  Camera, Upload, Image as ImageIcon, Download
 } from 'lucide-react';
+import { generateCvPdf } from '../../utils/generatePdf';
 
 interface CvBuilderModalProps {
   initialProfile: Partial<UserProfile> | null;
@@ -949,16 +950,18 @@ export const CvBuilderModal: React.FC<CvBuilderModalProps> = ({
                 <div className="flex items-center gap-2">
                   <button
                     type="button"
-                    onClick={() => window.print()}
-                    className="btn-black px-4 py-2 text-xs flex items-center gap-1.5"
+                    onClick={async () => {
+                      await generateCvPdf('cv-modal-printable-document', `${(formData.full_name || 'AlumniConnect').replace(/\s+/g, '_')}_CV.pdf`);
+                    }}
+                    className="btn-black px-4 py-2 text-xs flex items-center gap-1.5 shadow-sm"
                   >
-                    <Printer className="w-3.5 h-3.5 text-[#ff5500]" /> Print / Export PDF
+                    <Download className="w-3.5 h-3.5 text-[#ff5500]" /> Download Professional CV PDF
                   </button>
                 </div>
               </div>
 
               {/* CV Document Box */}
-              <div className="bg-white border border-zinc-300 rounded-2xl p-8 space-y-6 shadow-md text-zinc-900 font-sans print:shadow-none print:border-none">
+              <div id="cv-modal-printable-document" className="bg-white border border-zinc-300 rounded-2xl p-8 space-y-6 shadow-md text-zinc-900 font-sans print:shadow-none print:border-none">
                 {/* CV Header */}
                 <div className="border-b border-zinc-900 pb-4 flex justify-between items-start">
                   <div className="flex items-center gap-4">

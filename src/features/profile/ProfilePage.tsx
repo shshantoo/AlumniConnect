@@ -2,16 +2,18 @@ import React, { useState } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { 
   Mail, Phone, GraduationCap, Edit3, MapPin, 
-  Briefcase, Award, Code, BookOpen, HeartHandshake, FileText, Camera, Upload, Download, Printer, X 
+  Briefcase, Award, Code, BookOpen, HeartHandshake, FileText, Camera, Upload, Download, Printer, X, Sparkles, Check 
 } from 'lucide-react';
 import { ProfileCompletionRing } from '../../components/profile/ProfileCompletionRing';
 import { CvBuilderModal } from './CvBuilderModal';
 import { uploadProfilePictureToSupabase } from '../../utils/supabase';
+import { generateCvPdf } from '../../utils/generatePdf';
 
 export const ProfilePage: React.FC = () => {
   const { currentUser, currentRole, profile, updateUserProfile } = useAuth();
   const [isCvBuilderOpen, setIsCvBuilderOpen] = useState(false);
   const [isPdfPreviewOpen, setIsPdfPreviewOpen] = useState(false);
+  const [isDownloadingPdf, setIsDownloadingPdf] = useState(false);
   const [activeTab, setActiveTab] = useState<'overview' | 'experience' | 'education' | 'skills' | 'projects' | 'networking'>('overview');
 
   const handleDirectPhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -20,6 +22,18 @@ export const ProfilePage: React.FC = () => {
       const photoUrl = await uploadProfilePictureToSupabase(profile?.user_id || 'usr-1', file);
       updateUserProfile({ photo: photoUrl });
     }
+  };
+
+  const handleTriggerPdfDownload = async () => {
+    setIsDownloadingPdf(true);
+    // Ensure document preview modal is rendered if not open
+    if (!isPdfPreviewOpen) {
+      setIsPdfPreviewOpen(true);
+      await new Promise(r => setTimeout(r, 400));
+    }
+    const filename = `${(profile?.full_name || 'AlumniConnect').replace(/\s+/g, '_')}_CV.pdf`;
+    await generateCvPdf('cv-printable-document', filename);
+    setIsDownloadingPdf(false);
   };
 
   return (
@@ -58,13 +72,15 @@ export const ProfilePage: React.FC = () => {
                 </p>
               </div>
 
-              {/* ACTION BUTTONS: Download CV PDF & Edit 18-Section CV */}
+              {/* DIRECT PDF GENERATOR DOWNLOAD BUTTON */}
               <div className="flex flex-wrap items-center gap-2 justify-center sm:justify-end">
                 <button
-                  onClick={() => setIsPdfPreviewOpen(true)}
-                  className="btn-black px-4 py-2 text-xs font-bold flex items-center gap-1.5 shadow-md"
+                  onClick={handleTriggerPdfDownload}
+                  disabled={isDownloadingPdf}
+                  className="btn-black px-4 py-2 text-xs font-bold flex items-center gap-2 shadow-md disabled:opacity-60"
                 >
-                  <Download className="w-4 h-4 text-[#ff5500]" /> Download CV (PDF)
+                  <Download className="w-4 h-4 text-[#ff5500]" />
+                  {isDownloadingPdf ? 'Generating PDF...' : 'Download CV (PDF)'}
                 </button>
 
                 <label className="btn-white px-3.5 py-2 text-xs font-semibold cursor-pointer inline-flex items-center gap-1.5 shadow-xs">
@@ -209,7 +225,7 @@ export const ProfilePage: React.FC = () => {
         </div>
       </div>
 
-      {/* DOWNLOAD CV PDF MODAL (PRINTABLE FORMAT WITH PROFILE PICTURE) */}
+      {/* PROFESSIONAL EXECUTIVE CV TEMPLATE MODAL FOR DIRECT PDF DOWNLOAD */}
       {isPdfPreviewOpen && (
         <div className="fixed inset-0 bg-zinc-950/60 backdrop-blur-md z-50 flex items-center justify-center p-3 sm:p-6 overflow-y-auto">
           <div className="bg-white border border-[#e5e0d5] rounded-3xl w-full max-w-4xl my-auto shadow-2xl flex flex-col max-h-[92vh] overflow-hidden animate-scaleUp">
@@ -218,21 +234,23 @@ export const ProfilePage: React.FC = () => {
             <div className="bg-[#f8f6f0] border-b border-[#e5e0d5] px-6 py-4 flex items-center justify-between">
               <div className="flex items-center gap-3">
                 <div className="w-9 h-9 rounded-xl bg-[#0a0a0a] text-white flex items-center justify-center font-bold">
-                  <Printer className="w-5 h-5 text-[#ff5500]" />
+                  <Download className="w-5 h-5 text-[#ff5500]" />
                 </div>
                 <div>
-                  <h3 className="text-base font-extrabold text-[#0a0a0a]">Print / Save CV as PDF</h3>
-                  <p className="text-xs text-zinc-500">Official document template with your Supabase profile picture.</p>
+                  <h3 className="text-base font-extrabold text-[#0a0a0a]">Professional Executive CV Document</h3>
+                  <p className="text-xs text-zinc-500">Auto-generates clean A4 PDF file directly to your downloads.</p>
                 </div>
               </div>
 
               <div className="flex items-center gap-3">
                 <button
                   type="button"
-                  onClick={() => window.print()}
-                  className="btn-black px-4 py-2 text-xs font-bold flex items-center gap-1.5 shadow-md"
+                  onClick={handleTriggerPdfDownload}
+                  disabled={isDownloadingPdf}
+                  className="btn-black px-4 py-2 text-xs font-bold flex items-center gap-1.5 shadow-md disabled:opacity-60"
                 >
-                  <Printer className="w-4 h-4 text-[#ff5500]" /> Download / Print PDF Now
+                  <Download className="w-4 h-4 text-[#ff5500]" />
+                  {isDownloadingPdf ? 'Generating PDF File...' : 'Download PDF File'}
                 </button>
                 <button
                   onClick={() => setIsPdfPreviewOpen(false)}
@@ -243,94 +261,98 @@ export const ProfilePage: React.FC = () => {
               </div>
             </div>
 
-            {/* Document Printable Box */}
-            <div className="p-8 overflow-y-auto flex-1 bg-white text-zinc-900 font-sans space-y-6 print:p-0">
-              
-              {/* Header with Profile Picture */}
-              <div className="border-b border-zinc-900 pb-5 flex justify-between items-start">
-                <div className="flex items-center gap-5">
-                  <img
-                    src={profile?.photo || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=300&q=80'}
-                    alt="CV Profile Avatar"
-                    className="w-20 h-20 rounded-2xl object-cover ring-2 ring-zinc-400 shadow-sm flex-shrink-0"
-                  />
-                  <div className="space-y-1">
-                    <h1 className="text-2xl font-extrabold text-zinc-950 uppercase tracking-tight">{profile?.full_name || 'Your Full Name'}</h1>
-                    <p className="text-sm text-[#ff5500] font-bold">{profile?.headline || 'Software Engineer'}</p>
-                    <p className="text-xs text-zinc-600 mt-1">{profile?.email} • {profile?.phone} • {profile?.location}, {profile?.country}</p>
+            {/* DOCUMENT CANVASS TARGET FOR HTML2CANVAS + JSPDF GENERATION */}
+            <div className="p-8 overflow-y-auto flex-1 bg-white text-zinc-900 font-sans space-y-6">
+              <div
+                id="cv-printable-document"
+                className="bg-white p-8 space-y-6 max-w-3xl mx-auto border border-zinc-200 rounded-xl shadow-xs"
+              >
+                {/* Professional CV Header with Profile Picture */}
+                <div className="border-b-2 border-zinc-950 pb-5 flex justify-between items-start">
+                  <div className="flex items-center gap-5">
+                    <img
+                      src={profile?.photo || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=300&q=80'}
+                      alt="CV Profile Avatar"
+                      crossOrigin="anonymous"
+                      className="w-20 h-20 rounded-2xl object-cover ring-2 ring-zinc-400 shadow-xs flex-shrink-0"
+                    />
+                    <div className="space-y-1">
+                      <h1 className="text-2xl font-extrabold text-zinc-950 uppercase tracking-tight">{profile?.full_name || 'Your Full Name'}</h1>
+                      <p className="text-sm text-[#ff5500] font-bold">{profile?.headline || 'Software Engineer'}</p>
+                      <p className="text-xs text-zinc-600 mt-1">{profile?.email} • {profile?.phone} • {profile?.location}, {profile?.country}</p>
+                    </div>
                   </div>
+                  {profile?.linkedin && (
+                    <span className="text-[11px] font-mono text-zinc-500 hidden sm:inline">{profile.linkedin}</span>
+                  )}
                 </div>
-                {profile?.linkedin && (
-                  <span className="text-[11px] font-mono text-zinc-500 hidden sm:inline">{profile.linkedin}</span>
+
+                {/* Professional Summary */}
+                {profile?.professional_summary && (
+                  <div className="space-y-1">
+                    <h3 className="text-xs font-bold uppercase tracking-wider text-zinc-950 border-b border-zinc-300 pb-0.5">Professional Executive Summary</h3>
+                    <p className="text-xs leading-relaxed text-zinc-700">{profile.professional_summary}</p>
+                  </div>
                 )}
-              </div>
 
-              {/* Summary */}
-              {profile?.professional_summary && (
-                <div className="space-y-1">
-                  <h3 className="text-xs font-bold uppercase tracking-wider text-zinc-950 border-b border-zinc-300 pb-0.5">Professional Executive Summary</h3>
-                  <p className="text-xs leading-relaxed text-zinc-700">{profile.professional_summary}</p>
-                </div>
-              )}
-
-              {/* Education */}
-              {profile?.education_history && profile.education_history.length > 0 && (
-                <div className="space-y-2">
-                  <h3 className="text-xs font-bold uppercase tracking-wider text-zinc-950 border-b border-zinc-300 pb-0.5">Education History</h3>
-                  {profile.education_history.map(edu => (
-                    <div key={edu.id} className="flex justify-between text-xs">
-                      <div>
-                        <strong className="text-zinc-950">{edu.degree}</strong> — <span className="text-zinc-700">{edu.institution}</span>
+                {/* Education History */}
+                {profile?.education_history && profile.education_history.length > 0 && (
+                  <div className="space-y-2">
+                    <h3 className="text-xs font-bold uppercase tracking-wider text-zinc-950 border-b border-zinc-300 pb-0.5">Education History</h3>
+                    {profile.education_history.map(edu => (
+                      <div key={edu.id} className="flex justify-between text-xs">
+                        <div>
+                          <strong className="text-zinc-950">{edu.degree}</strong> — <span className="text-zinc-700">{edu.institution}</span>
+                        </div>
+                        <span className="text-zinc-500 font-mono">{edu.start_year} – {edu.end_year}</span>
                       </div>
-                      <span className="text-zinc-500 font-mono">{edu.start_year} – {edu.end_year}</span>
-                    </div>
-                  ))}
-                </div>
-              )}
-
-              {/* Experience */}
-              {profile?.work_experience && profile.work_experience.length > 0 && (
-                <div className="space-y-2">
-                  <h3 className="text-xs font-bold uppercase tracking-wider text-zinc-950 border-b border-zinc-300 pb-0.5">Work Experience</h3>
-                  {profile.work_experience.map(work => (
-                    <div key={work.id} className="space-y-0.5 text-xs">
-                      <div className="flex justify-between font-bold text-zinc-950">
-                        <span>{work.title} @ {work.company}</span>
-                        <span className="text-zinc-500 font-mono text-[11px]">{work.start_date} – {work.is_current ? 'Present' : work.end_date}</span>
-                      </div>
-                      <p className="text-zinc-700 text-[11px]">{work.responsibilities}</p>
-                    </div>
-                  ))}
-                </div>
-              )}
-
-              {/* Skills */}
-              {profile?.skills_categorized && profile.skills_categorized.length > 0 && (
-                <div className="space-y-1">
-                  <h3 className="text-xs font-bold uppercase tracking-wider text-zinc-950 border-b border-zinc-300 pb-0.5">Categorized Skills</h3>
-                  <div className="flex flex-wrap gap-1.5 text-xs pt-1">
-                    {profile.skills_categorized.map(skl => (
-                      <span key={skl.id} className="px-2 py-0.5 rounded bg-zinc-100 border border-zinc-200 text-zinc-800 text-[11px] font-medium">
-                        {skl.name} ({skl.level})
-                      </span>
                     ))}
                   </div>
-                </div>
-              )}
+                )}
 
-              {/* Projects */}
-              {profile?.projects_list && profile.projects_list.length > 0 && (
-                <div className="space-y-2">
-                  <h3 className="text-xs font-bold uppercase tracking-wider text-zinc-950 border-b border-zinc-300 pb-0.5">Key Projects</h3>
-                  {profile.projects_list.map(prj => (
-                    <div key={prj.id} className="text-xs space-y-0.5">
-                      <p className="font-bold text-zinc-950">{prj.name} <span className="text-zinc-500 font-normal">({prj.tag})</span></p>
-                      <p className="text-zinc-700 text-[11px]">{prj.description}</p>
+                {/* Work Experience */}
+                {profile?.work_experience && profile.work_experience.length > 0 && (
+                  <div className="space-y-2">
+                    <h3 className="text-xs font-bold uppercase tracking-wider text-zinc-950 border-b border-zinc-300 pb-0.5">Work Experience</h3>
+                    {profile.work_experience.map(work => (
+                      <div key={work.id} className="space-y-0.5 text-xs">
+                        <div className="flex justify-between font-bold text-zinc-950">
+                          <span>{work.title} @ {work.company}</span>
+                          <span className="text-zinc-500 font-mono text-[11px]">{work.start_date} – {work.is_current ? 'Present' : work.end_date}</span>
+                        </div>
+                        <p className="text-zinc-700 text-[11px]">{work.responsibilities}</p>
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                {/* Skills */}
+                {profile?.skills_categorized && profile.skills_categorized.length > 0 && (
+                  <div className="space-y-1">
+                    <h3 className="text-xs font-bold uppercase tracking-wider text-zinc-950 border-b border-zinc-300 pb-0.5">Categorized Skills</h3>
+                    <div className="flex flex-wrap gap-1.5 text-xs pt-1">
+                      {profile.skills_categorized.map(skl => (
+                        <span key={skl.id} className="px-2 py-0.5 rounded bg-zinc-100 border border-zinc-200 text-zinc-800 text-[11px] font-medium">
+                          {skl.name} ({skl.level})
+                        </span>
+                      ))}
                     </div>
-                  ))}
-                </div>
-              )}
+                  </div>
+                )}
 
+                {/* Projects */}
+                {profile?.projects_list && profile.projects_list.length > 0 && (
+                  <div className="space-y-2">
+                    <h3 className="text-xs font-bold uppercase tracking-wider text-zinc-950 border-b border-zinc-300 pb-0.5">Key Projects</h3>
+                    {profile.projects_list.map(prj => (
+                      <div key={prj.id} className="text-xs space-y-0.5">
+                        <p className="font-bold text-zinc-950">{prj.name} <span className="text-zinc-500 font-normal">({prj.tag})</span></p>
+                        <p className="text-zinc-700 text-[11px]">{prj.description}</p>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
             </div>
           </div>
         </div>
