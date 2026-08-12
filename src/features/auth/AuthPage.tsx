@@ -4,7 +4,7 @@ import { useAuth } from '../../context/AuthContext';
 import { UserRole } from '../../types/database.types';
 import { 
   GraduationCap, Briefcase, Building2, BookOpen, ShieldCheck, 
-  Mail, Lock, ArrowRight, Copy, Check 
+  Mail, Lock, ArrowRight, User, Phone, MapPin, Globe, AtSign, CheckCircle2 
 } from 'lucide-react';
 
 const ROLES: { id: UserRole; label: string; desc: string; icon: React.FC<{ className?: string }> }[] = [
@@ -19,21 +19,42 @@ export const AuthPage: React.FC = () => {
   const { loginWithSupabase, signUpWithSupabase, switchRole } = useAuth();
   const [isSignUp, setIsSignUp] = useState(false);
   const [selectedRole, setSelectedRole] = useState<UserRole>('student');
+  
+  // Login State
+  const [loginIdentifier, setLoginIdentifier] = useState(''); // Username or Email
+  const [loginPassword, setLoginPassword] = useState('');
+
+  // Sign Up Fields
+  const [firstName, setFirstName] = useState('');
+  const [lastName, setLastName] = useState('');
+  const [username, setUsername] = useState('');
   const [email, setEmail] = useState('');
+  const [mobile, setMobile] = useState('');
+  const [country, setCountry] = useState('Bangladesh');
+  const [location, setLocation] = useState('Dhaka');
   const [password, setPassword] = useState('');
-  const [fullName, setFullName] = useState('');
   const [loading, setLoading] = useState(false);
-  const [copied, setCopied] = useState(false);
   const navigate = useNavigate();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
+
     if (isSignUp) {
-      const ok = await signUpWithSupabase(email, password, selectedRole, fullName);
+      const ok = await signUpWithSupabase({
+        email,
+        password,
+        role: selectedRole,
+        firstName,
+        lastName,
+        username,
+        mobile,
+        country,
+        location
+      });
       if (ok) navigate(`/dashboard/${selectedRole}`);
     } else {
-      const ok = await loginWithSupabase(email, selectedRole);
+      const ok = await loginWithSupabase(loginIdentifier, selectedRole);
       if (ok) navigate(`/dashboard/${selectedRole}`);
     }
     setLoading(false);
@@ -44,20 +65,12 @@ export const AuthPage: React.FC = () => {
     navigate(`/dashboard/${role}`);
   };
 
-  const handleCopyCmd = () => {
-    navigator.clipboard.writeText('npx skills add Leonxlnx/taste-skill');
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
-  };
-
   return (
-    <div className="min-h-[82vh] flex items-center justify-center py-8 px-4">
+    <div className="min-h-[85vh] flex items-center justify-center py-8 px-4">
       <div className="w-full max-w-4xl grid grid-cols-1 lg:grid-cols-2 gap-10 items-center">
         
-        {/* Left Side: Reference Image Style Branding */}
+        {/* Left Side: Brand Showcase */}
         <div className="space-y-6 lg:pr-4">
-          
-          {/* Pill Badge */}
           <div>
             <span className="taste-pill">
               <span className="w-2 h-2 rounded-full bg-[#ff5500] animate-pulse" />
@@ -66,44 +79,26 @@ export const AuthPage: React.FC = () => {
             </span>
           </div>
           
-          {/* Main Title */}
           <h1 className="text-4xl sm:text-5xl font-extrabold text-[#0a0a0a] tracking-tight">
             Alumni<span className="text-[#ff5500]">Connect</span>
           </h1>
 
-          {/* Editorial Serif Subtitle */}
           <p className="font-serif text-2xl sm:text-3xl text-zinc-800 tracking-tight font-normal leading-snug">
-            The Anti-Slop Alumni Network Framework for CSE Engineers
+            The Anti-Slop Alumni Network & Interactive CV Engine
           </p>
 
-          {/* Accent Slogan */}
           <p className="text-[#ff5500] font-semibold text-lg">
-            Less slop, designs pop.
+            Less slop, real connections pop.
           </p>
 
           <p className="text-zinc-600 text-xs sm:text-sm leading-relaxed font-normal">
-            The unified portal connecting Computer Science & Engineering students, alumni tech leaders, hiring corporate teams, and faculty.
+            Unified portal connecting Computer Science & Engineering students, alumni tech leaders, corporate hiring teams, and department faculty.
           </p>
 
-          {/* Reference Terminal Command Chip */}
-          <div className="bg-[#121212] text-white p-3.5 rounded-2xl flex items-center justify-between font-mono text-xs shadow-md">
-            <div className="flex items-center gap-2">
-              <span className="text-zinc-500">$</span>
-              <span className="text-zinc-200">npx skills add Leonxlnx/taste-skill</span>
-            </div>
-            <button
-              onClick={handleCopyCmd}
-              className="text-zinc-400 hover:text-white flex items-center gap-1.5 text-[11px] font-sans font-semibold transition"
-            >
-              {copied ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
-              <span>{copied ? 'COPIED' : 'COPY'}</span>
-            </button>
-          </div>
-
-          {/* Quick Demo Switcher Buttons */}
+          {/* Quick Demo Logins Box */}
           <div className="taste-card p-4 space-y-2.5">
             <p className="text-xs font-bold text-zinc-900 flex items-center gap-1.5">
-              <span className="w-2 h-2 rounded-full bg-emerald-500" /> 1-Click Instant Demo Logins:
+              <CheckCircle2 className="w-4 h-4 text-emerald-600" /> 1-Click Instant Persona Switches:
             </p>
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
               {ROLES.map((r) => {
@@ -121,20 +116,25 @@ export const AuthPage: React.FC = () => {
               })}
             </div>
           </div>
-
         </div>
 
         {/* Right Side: Auth Form */}
         <div className="taste-card p-6 sm:p-8 space-y-6 shadow-md relative">
           <div className="flex items-center justify-between border-b border-zinc-100 pb-4">
-            <h2 className="text-xl font-extrabold text-[#0a0a0a]">
-              {isSignUp ? 'Create Account' : 'Sign In to AlumniConnect'}
-            </h2>
+            <div>
+              <h2 className="text-xl font-extrabold text-[#0a0a0a]">
+                {isSignUp ? 'Create Account' : 'Sign In'}
+              </h2>
+              <p className="text-xs text-zinc-500 font-medium">
+                {isSignUp ? 'Enter your basic details to get started' : 'Sign in using Username or Email'}
+              </p>
+            </div>
+
             <button
               onClick={() => setIsSignUp(!isSignUp)}
               className="text-xs font-bold text-[#ff5500] hover:underline transition"
             >
-              {isSignUp ? 'Already have account? Sign In' : 'Need an account? Sign Up'}
+              {isSignUp ? 'Already have account? Sign In' : 'Need account? Sign Up'}
             </button>
           </div>
 
@@ -161,56 +161,173 @@ export const AuthPage: React.FC = () => {
               </div>
             </div>
 
-            {isSignUp && (
-              <div>
-                <label className="block text-xs font-bold text-zinc-800 mb-1">Full Name</label>
-                <input
-                  type="text"
-                  required
-                  placeholder="Shanto Rahman"
-                  value={fullName}
-                  onChange={(e) => setFullName(e.target.value)}
-                  className="w-full bg-white border border-[#e5e0d5] rounded-xl p-3 text-xs text-zinc-900 focus:outline-none focus:border-[#ff5500]"
-                />
-              </div>
+            {/* LOGIN FORM: Username or Email + Password */}
+            {!isSignUp ? (
+              <>
+                <div>
+                  <label className="block text-xs font-bold text-zinc-800 mb-1">Username or Email Address</label>
+                  <div className="relative">
+                    <AtSign className="w-4 h-4 text-zinc-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
+                    <input
+                      type="text"
+                      required
+                      placeholder="username or email@univ.edu"
+                      value={loginIdentifier}
+                      onChange={(e) => setLoginIdentifier(e.target.value)}
+                      className="w-full bg-white border border-[#e5e0d5] rounded-xl pl-10 pr-4 py-3 text-xs text-zinc-900 focus:outline-none focus:border-[#ff5500]"
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-xs font-bold text-zinc-800 mb-1">Password</label>
+                  <div className="relative">
+                    <Lock className="w-4 h-4 text-zinc-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
+                    <input
+                      type="password"
+                      required
+                      placeholder="••••••••"
+                      value={loginPassword}
+                      onChange={(e) => setLoginPassword(e.target.value)}
+                      className="w-full bg-white border border-[#e5e0d5] rounded-xl pl-10 pr-4 py-3 text-xs text-zinc-900 focus:outline-none focus:border-[#ff5500]"
+                    />
+                  </div>
+                </div>
+              </>
+            ) : (
+              /* SIGNUP FORM: First Name, Last Name, Username, Mobile, Email, Country, Location */
+              <>
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-xs font-bold text-zinc-800 mb-1">First Name *</label>
+                    <div className="relative">
+                      <User className="w-4 h-4 text-zinc-400 absolute left-3 top-1/2 -translate-y-1/2" />
+                      <input
+                        type="text"
+                        required
+                        placeholder="Shanto"
+                        value={firstName}
+                        onChange={(e) => setFirstName(e.target.value)}
+                        className="w-full bg-white border border-[#e5e0d5] rounded-xl pl-9 pr-3 py-2.5 text-xs text-zinc-900 focus:outline-none focus:border-[#ff5500]"
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-bold text-zinc-800 mb-1">Last Name *</label>
+                    <input
+                      type="text"
+                      required
+                      placeholder="Rahman"
+                      value={lastName}
+                      onChange={(e) => setLastName(e.target.value)}
+                      className="w-full bg-white border border-[#e5e0d5] rounded-xl px-3 py-2.5 text-xs text-zinc-900 focus:outline-none focus:border-[#ff5500]"
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-xs font-bold text-zinc-800 mb-1">Username *</label>
+                    <div className="relative">
+                      <AtSign className="w-4 h-4 text-zinc-400 absolute left-3 top-1/2 -translate-y-1/2" />
+                      <input
+                        type="text"
+                        required
+                        placeholder="shshantoo"
+                        value={username}
+                        onChange={(e) => setUsername(e.target.value)}
+                        className="w-full bg-white border border-[#e5e0d5] rounded-xl pl-9 pr-3 py-2.5 text-xs text-zinc-900 focus:outline-none focus:border-[#ff5500]"
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-bold text-zinc-800 mb-1">Mobile Number *</label>
+                    <div className="relative">
+                      <Phone className="w-4 h-4 text-zinc-400 absolute left-3 top-1/2 -translate-y-1/2" />
+                      <input
+                        type="text"
+                        required
+                        placeholder="+880 1700-000000"
+                        value={mobile}
+                        onChange={(e) => setMobile(e.target.value)}
+                        className="w-full bg-white border border-[#e5e0d5] rounded-xl pl-9 pr-3 py-2.5 text-xs text-zinc-900 focus:outline-none focus:border-[#ff5500]"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-xs font-bold text-zinc-800 mb-1">Email Address *</label>
+                  <div className="relative">
+                    <Mail className="w-4 h-4 text-zinc-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
+                    <input
+                      type="email"
+                      required
+                      placeholder="student@univ.edu"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      className="w-full bg-white border border-[#e5e0d5] rounded-xl pl-10 pr-4 py-2.5 text-xs text-zinc-900 focus:outline-none focus:border-[#ff5500]"
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-xs font-bold text-zinc-800 mb-1">Country *</label>
+                    <div className="relative">
+                      <Globe className="w-4 h-4 text-zinc-400 absolute left-3 top-1/2 -translate-y-1/2" />
+                      <input
+                        type="text"
+                        required
+                        placeholder="Bangladesh"
+                        value={country}
+                        onChange={(e) => setCountry(e.target.value)}
+                        className="w-full bg-white border border-[#e5e0d5] rounded-xl pl-9 pr-3 py-2.5 text-xs text-zinc-900 focus:outline-none focus:border-[#ff5500]"
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-bold text-zinc-800 mb-1">Location / City *</label>
+                    <div className="relative">
+                      <MapPin className="w-4 h-4 text-zinc-400 absolute left-3 top-1/2 -translate-y-1/2" />
+                      <input
+                        type="text"
+                        required
+                        placeholder="Dhaka"
+                        value={location}
+                        onChange={(e) => setLocation(e.target.value)}
+                        className="w-full bg-white border border-[#e5e0d5] rounded-xl pl-9 pr-3 py-2.5 text-xs text-zinc-900 focus:outline-none focus:border-[#ff5500]"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-xs font-bold text-zinc-800 mb-1">Password *</label>
+                  <div className="relative">
+                    <Lock className="w-4 h-4 text-zinc-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
+                    <input
+                      type="password"
+                      required
+                      placeholder="••••••••"
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      className="w-full bg-white border border-[#e5e0d5] rounded-xl pl-10 pr-4 py-2.5 text-xs text-zinc-900 focus:outline-none focus:border-[#ff5500]"
+                    />
+                  </div>
+                </div>
+              </>
             )}
-
-            <div>
-              <label className="block text-xs font-bold text-zinc-800 mb-1">Email Address</label>
-              <div className="relative">
-                <Mail className="w-4 h-4 text-zinc-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
-                <input
-                  type="email"
-                  required
-                  placeholder="student@univ.edu"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  className="w-full bg-white border border-[#e5e0d5] rounded-xl pl-10 pr-4 py-3 text-xs text-zinc-900 focus:outline-none focus:border-[#ff5500]"
-                />
-              </div>
-            </div>
-
-            <div>
-              <label className="block text-xs font-bold text-zinc-800 mb-1">Password</label>
-              <div className="relative">
-                <Lock className="w-4 h-4 text-zinc-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
-                <input
-                  type="password"
-                  required
-                  placeholder="••••••••"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  className="w-full bg-white border border-[#e5e0d5] rounded-xl pl-10 pr-4 py-3 text-xs text-zinc-900 focus:outline-none focus:border-[#ff5500]"
-                />
-              </div>
-            </div>
 
             <button
               type="submit"
               disabled={loading}
-              className="btn-black w-full py-3.5 text-xs flex items-center justify-center gap-2"
+              className="btn-black w-full py-3.5 text-xs flex items-center justify-center gap-2 shadow-md"
             >
-              {loading ? 'Processing...' : (isSignUp ? 'Create & Launch Dashboard' : 'Sign In Now')}
+              {loading ? 'Processing...' : (isSignUp ? 'Complete Registration' : 'Sign In Now')}
               <ArrowRight className="w-4 h-4 text-[#ff5500]" />
             </button>
           </form>

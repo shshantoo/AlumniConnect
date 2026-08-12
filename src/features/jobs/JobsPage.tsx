@@ -14,7 +14,7 @@ export const JobsPage: React.FC = () => {
 
   const allOpportunities = [
     ...jobs.map(j => ({ ...j, category: 'job' as const })),
-    ...internships.map(i => ({ ...i, salary: i.stipend, type: 'Internship' as const, category: 'internship' as const, company_logo: '' }))
+    ...internships.map(i => ({ ...i, salary: (i as any).stipend || i.salary, type: 'Internship' as const, category: 'internship' as const, company_logo: '' }))
   ];
 
   const filteredItems = allOpportunities.filter(item => {
@@ -126,7 +126,7 @@ export const JobsPage: React.FC = () => {
                     <div className="flex flex-wrap items-center gap-4 text-xs text-zinc-400 pt-2">
                       <span className="flex items-center gap-1"><MapPin className="w-3.5 h-3.5 text-zinc-500" /> {item.location}</span>
                       <span className="flex items-center gap-1"><DollarSign className="w-3.5 h-3.5 text-emerald-400" /> {item.salary}</span>
-                      <span className="flex items-center gap-1"><Clock className="w-3.5 h-3.5 text-zinc-500" /> Deadline: {item.deadline}</span>
+                      <span className="flex items-center gap-1"><Clock className="w-3.5 h-3.5 text-zinc-500" /> Deadline: {(item as any).deadline || 'Open'}</span>
                     </div>
                   </div>
                 </div>

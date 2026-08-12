@@ -1,35 +1,47 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { supabase } from '../utils/supabase';
 import { 
-  User, UserRole, Profile, StudentProfile, AlumniProfile, EmployerProfile, FacultyProfile,
-  Job, Internship, JobApplication, MentorshipRequest, EventItem, NotificationItem, Appointment 
+  UserRole, UserProfile, StudentProfile, AlumniProfile,
+  JobListing, ApplicationRecord, MentorshipRequestRecord, 
+  EventRecord, NotificationRecord, AppointmentRecord 
 } from '../types/database.types';
 import { 
-  INITIAL_USERS, INITIAL_PROFILES, INITIAL_STUDENT_PROFILE, INITIAL_ALUMNI_PROFILES, 
-  INITIAL_JOBS, INITIAL_INTERNSHIPS, INITIAL_APPLICATIONS, INITIAL_MENTORSHIP_REQUESTS, 
+  INITIAL_PROFILES, INITIAL_STUDENT_PROFILE, INITIAL_ALUMNI_PROFILES, 
+  INITIAL_JOBS, INITIAL_APPLICATIONS, INITIAL_MENTORSHIP_REQUESTS, 
   INITIAL_EVENTS, INITIAL_NOTIFICATIONS, INITIAL_APPOINTMENTS 
 } from '../mock/seedData';
 
 interface AuthContextType {
-  currentUser: User | null;
+  currentUser: { id: string; email: string } | null;
   currentRole: UserRole;
-  profile: Profile | null;
+  profile: UserProfile | null;
   studentProfile: StudentProfile | null;
   alumniProfiles: (AlumniProfile & { name: string; email: string; photo: string })[];
-  jobs: Job[];
-  internships: Internship[];
-  applications: JobApplication[];
-  mentorshipRequests: MentorshipRequest[];
-  events: EventItem[];
-  notifications: NotificationItem[];
-  appointments: Appointment[];
+  jobs: JobListing[];
+  internships: JobListing[];
+  applications: ApplicationRecord[];
+  mentorshipRequests: MentorshipRequestRecord[];
+  events: EventRecord[];
+  notifications: NotificationRecord[];
+  appointments: AppointmentRecord[];
   isLoading: boolean;
   switchRole: (role: UserRole) => void;
-  loginWithSupabase: (email: string, role?: UserRole) => Promise<boolean>;
-  signUpWithSupabase: (email: string, password: string, role: UserRole, fullName: string) => Promise<boolean>;
+  loginWithSupabase: (identifier: string, role?: UserRole) => Promise<boolean>;
+  signUpWithSupabase: (data: {
+    email: string;
+    password: string;
+    role: UserRole;
+    firstName: string;
+    lastName: string;
+    username: string;
+    mobile: string;
+    country: string;
+    location: string;
+  }) => Promise<boolean>;
+  updateUserProfile: (updatedData: Partial<UserProfile>) => void;
   logout: () => void;
   applyForJob: (jobId: string, coverLetter: string, isInternship?: boolean) => void;
-  postJob: (newJob: Partial<Job>) => void;
+  postJob: (newJob: Partial<JobListing>) => void;
   requestMentorship: (mentorId: string, mentorName: string, mentorCompany: string, topic: string, message: string) => void;
   updateMentorshipStatus: (requestId: string, status: 'Accepted' | 'Rejected') => void;
   registerForEvent: (eventId: string) => void;
@@ -42,197 +54,181 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [currentRole, setCurrentRole] = useState<UserRole>('student');
-  const [currentUser, setCurrentUser] = useState<User | null>(null);
-  const [profile, setProfile] = useState<Profile | null>(null);
-  const [studentProfile, setStudentProfile] = useState<StudentProfile | null>(null);
-  const [alumniProfiles, setAlumniProfiles] = useState<(AlumniProfile & { name: string; email: string; photo: string })[]>([]);
+  const [currentUser, setCurrentUser] = useState<{ id: string; email: string } | null>({
+    id: 'usr-student-1',
+    email: 'shanto.student@univ.edu'
+  });
+  const [profile, setProfile] = useState<UserProfile | null>(INITIAL_PROFILES['student'] as UserProfile);
+  const [studentProfile, setStudentProfile] = useState<StudentProfile | null>(INITIAL_STUDENT_PROFILE);
+  const [alumniProfiles, setAlumniProfiles] = useState<(AlumniProfile & { name: string; email: string; photo: string })[]>(INITIAL_ALUMNI_PROFILES);
   
-  const [jobs, setJobs] = useState<Job[]>(INITIAL_JOBS);
-  const [internships, setInternships] = useState<Internship[]>(INITIAL_INTERNSHIPS);
-  const [applications, setApplications] = useState<JobApplication[]>(INITIAL_APPLICATIONS);
-  const [mentorshipRequests, setMentorshipRequests] = useState<MentorshipRequest[]>(INITIAL_MENTORSHIP_REQUESTS);
-  const [events, setEvents] = useState<EventItem[]>(INITIAL_EVENTS);
-  const [notifications, setNotifications] = useState<NotificationItem[]>(INITIAL_NOTIFICATIONS);
-  const [appointments, setAppointments] = useState<Appointment[]>(INITIAL_APPOINTMENTS);
+  const [jobs, setJobs] = useState<JobListing[]>(INITIAL_JOBS);
+  const [internships, setInternships] = useState<JobListing[]>([]);
+  const [applications, setApplications] = useState<ApplicationRecord[]>(INITIAL_APPLICATIONS);
+  const [mentorshipRequests, setMentorshipRequests] = useState<MentorshipRequestRecord[]>(INITIAL_MENTORSHIP_REQUESTS);
+  const [events, setEvents] = useState<EventRecord[]>(INITIAL_EVENTS);
+  const [notifications, setNotifications] = useState<NotificationRecord[]>(INITIAL_NOTIFICATIONS);
+  const [appointments, setAppointments] = useState<AppointmentRecord[]>(INITIAL_APPOINTMENTS);
   
   const [isLoading, setIsLoading] = useState<boolean>(false);
 
-  // Initialize Supabase Auth Session listener
-  useEffect(() => {
-    async function checkSupabaseSession() {
-      try {
-        const { data: { session } } = await supabase.auth.getSession();
-        if (session?.user) {
-          const userObj: User = {
-            id: session.user.id,
-            email: session.user.email || 'user@univ.edu',
-            role: (session.user.user_metadata?.role as UserRole) || 'student',
-            created_at: session.user.created_at
-          };
-          setCurrentUser(userObj);
-          setCurrentRole(userObj.role);
-        }
-      } catch (err) {
-        console.warn('Supabase session fallback initialized with local seed state', err);
-      }
-    }
-    checkSupabaseSession();
-
-    const { data: authListener } = supabase.auth.onAuthStateChange((_event, session) => {
-      if (session?.user) {
-        const role = (session.user.user_metadata?.role as UserRole) || 'student';
-        setCurrentUser({
-          id: session.user.id,
-          email: session.user.email || '',
-          role: role,
-          created_at: session.user.created_at
-        });
-        setCurrentRole(role);
-      }
-    });
-
-    return () => {
-      authListener.subscription.unsubscribe();
-    };
-  }, []);
-
-  // Quick Role Switching for Review / Testing Demo Mode
+  // Persona Role Switcher
   const switchRole = (role: UserRole) => {
     setCurrentRole(role);
-    const targetUser = INITIAL_USERS.find(u => u.role === role) || {
-      id: `usr-${role}-demo`,
-      email: `${role}.demo@univ.edu`,
-      role: role,
-      created_at: new Date().toISOString()
-    };
-    setCurrentUser(targetUser);
-    setProfile(INITIAL_PROFILES[targetUser.id] || {
-      id: `prof-${role}`,
-      user_id: targetUser.id,
-      full_name: `${role.toUpperCase()} Demo User`,
-      bio: `Active user operating under ${role.toUpperCase()} role context.`,
-      created_at: new Date().toISOString()
+    const mockProf = INITIAL_PROFILES[role] as UserProfile;
+    setProfile(mockProf);
+    setCurrentUser({
+      id: `usr-${role}-1`,
+      email: mockProf?.email || `${role}@univ.edu`
     });
   };
 
-  const loginWithSupabase = async (email: string, role?: UserRole): Promise<boolean> => {
+  // Login by Username or Email
+  const loginWithSupabase = async (identifier: string, role: UserRole = 'student'): Promise<boolean> => {
     setIsLoading(true);
     try {
-      // Demo match check
-      const demoUser = INITIAL_USERS.find(u => u.email.toLowerCase() === email.toLowerCase());
-      if (demoUser) {
-        switchRole(demoUser.role);
-        setIsLoading(false);
-        return true;
-      }
-      
-      const selectedRole = role || 'student';
-      switchRole(selectedRole);
-      setIsLoading(false);
-      return true;
-    } catch {
-      setIsLoading(false);
-      return false;
-    }
-  };
-
-  const signUpWithSupabase = async (email: string, _password: string, role: UserRole, fullName: string): Promise<boolean> => {
-    setIsLoading(true);
-    try {
-      const newUser: User = {
-        id: `usr-${Date.now()}`,
-        email,
-        role,
-        created_at: new Date().toISOString()
-      };
-      setCurrentUser(newUser);
       setCurrentRole(role);
-      setProfile({
-        id: `prof-${Date.now()}`,
-        user_id: newUser.id,
-        full_name: fullName,
-        bio: `Newly registered ${role} account.`,
-        created_at: new Date().toISOString()
+      const mockProf = INITIAL_PROFILES[role] as UserProfile;
+      const effectiveEmail = identifier.includes('@') ? identifier : `${identifier}@univ.edu`;
+      const updatedProf = {
+        ...mockProf,
+        email: effectiveEmail,
+        username: identifier.includes('@') ? identifier.split('@')[0] : identifier
+      };
+      setProfile(updatedProf);
+      setCurrentUser({
+        id: `usr-${role}-${Date.now()}`,
+        email: effectiveEmail
       });
       setIsLoading(false);
       return true;
-    } catch {
+    } catch (err) {
+      console.error(err);
       setIsLoading(false);
       return false;
     }
   };
 
-  const logout = async () => {
+  // Initial Signup with Names, Username, Mobile, Country, Location
+  const signUpWithSupabase = async (data: {
+    email: string;
+    password: string;
+    role: UserRole;
+    firstName: string;
+    lastName: string;
+    username: string;
+    mobile: string;
+    country: string;
+    location: string;
+  }): Promise<boolean> => {
+    setIsLoading(true);
     try {
-      await supabase.auth.signOut();
-    } catch {
-      // Ignore
+      const newUserId = `usr-${data.role}-${Date.now()}`;
+      const fullName = `${data.firstName} ${data.lastName}`.trim();
+
+      const newProfile: UserProfile = {
+        id: `prof-${Date.now()}`,
+        user_id: newUserId,
+        role: data.role,
+        full_name: fullName,
+        first_name: data.firstName,
+        last_name: data.lastName,
+        username: data.username,
+        email: data.email,
+        phone: data.mobile,
+        country: data.country,
+        location: data.location,
+        bio: `CSE ${data.role} profile created on AlumniConnect.`,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
+      };
+
+      setCurrentRole(data.role);
+      setCurrentUser({ id: newUserId, email: data.email });
+      setProfile(newProfile);
+
+      setIsLoading(false);
+      return true;
+    } catch (err) {
+      console.error(err);
+      setIsLoading(false);
+      return false;
     }
+  };
+
+  // Update Profile Data
+  const updateUserProfile = (updatedData: Partial<UserProfile>) => {
+    setProfile(prev => (prev ? { ...prev, ...updatedData } : (updatedData as UserProfile)));
+  };
+
+  const logout = () => {
     setCurrentUser(null);
     setProfile(null);
   };
 
-  const applyForJob = (jobId: string, coverLetter: string, isInternship: boolean = false) => {
-    const jobItem = jobs.find(j => j.id === jobId) || internships.find(i => i.id === jobId);
-    const newApp: JobApplication = {
+  // Action Methods
+  const applyForJob = (jobId: string, coverLetter: string) => {
+    const targetJob = jobs.find(j => j.id === jobId);
+    if (!targetJob || !profile) return;
+
+    const newApp: ApplicationRecord = {
       id: `app-${Date.now()}`,
-      student_id: currentUser?.id || 'usr-student-1',
-      student_name: profile?.full_name || 'Shanto Rahman',
       job_id: jobId,
-      job_title: jobItem?.title || (isInternship ? 'Internship Position' : 'Software Position'),
-      company_name: jobItem?.company || 'Tech Partner',
-      status: 'Pending',
-      resume: studentProfile?.resume || 'https://alumniconnect.edu/resumes/my-resume.pdf',
+      job_title: targetJob.title,
+      student_id: profile.user_id,
+      student_name: profile.full_name,
+      resume: profile.portfolio || 'https://univ.edu/resumes/sample.pdf',
       cover_letter: coverLetter,
+      status: 'Pending',
       created_at: new Date().toISOString()
     };
+
     setApplications(prev => [newApp, ...prev]);
 
-    // Add Notification
-    const newNotif: NotificationItem = {
-      id: `notif-${Date.now()}`,
-      user_id: currentUser?.id || 'usr-student-1',
-      title: 'Application Submitted!',
-      message: `Your application for "${newApp.job_title}" at ${newApp.company_name} was successfully submitted.`,
-      type: 'success',
-      is_read: false,
-      created_at: new Date().toISOString()
-    };
-    setNotifications(prev => [newNotif, ...prev]);
+    setNotifications(prev => [
+      {
+        id: `notif-${Date.now()}`,
+        user_id: profile.user_id,
+        title: 'Application Submitted',
+        message: `Your application for ${targetJob.title} at ${targetJob.company} was submitted.`,
+        created_at: new Date().toISOString(),
+        is_read: false
+      },
+      ...prev
+    ]);
   };
 
-  const postJob = (newJobData: Partial<Job>) => {
-    const createdJob: Job = {
+  const postJob = (newJob: Partial<JobListing>) => {
+    const job: JobListing = {
       id: `job-${Date.now()}`,
-      title: newJobData.title || 'Software Engineer',
-      description: newJobData.description || 'Dynamic position at top technology enterprise.',
-      salary: newJobData.salary || '$120,000 / yr',
-      company: newJobData.company || profile?.full_name || 'Innovate AI',
-      location: newJobData.location || 'Remote',
-      deadline: newJobData.deadline || '2026-12-31',
-      type: newJobData.type || 'Full-Time',
-      posted_by: currentUser?.id,
-      status: 'active',
-      created_at: new Date().toISOString(),
-      tags: newJobData.tags || ['Tech', 'Engineering']
+      title: newJob.title || 'Software Engineering Position',
+      company: newJob.company || 'Tech Enterprise',
+      location: newJob.location || 'Remote',
+      type: newJob.type || 'Full-Time',
+      salary: newJob.salary || '$120,000 / yr',
+      description: newJob.description || 'Join our tech team working on distributed systems.',
+      created_at: new Date().toISOString()
     };
-    setJobs(prev => [createdJob, ...prev]);
+
+    setJobs(prev => [job, ...prev]);
   };
 
   const requestMentorship = (mentorId: string, mentorName: string, mentorCompany: string, topic: string, message: string) => {
-    const newReq: MentorshipRequest = {
-      id: `ment-${Date.now()}`,
-      student_id: currentUser?.id || 'usr-student-1',
-      student_name: profile?.full_name || 'Shanto Rahman',
+    if (!profile) return;
+    const req: MentorshipRequestRecord = {
+      id: `req-${Date.now()}`,
+      student_id: profile.user_id,
+      student_name: profile.full_name,
       mentor_id: mentorId,
       mentor_name: mentorName,
       mentor_company: mentorCompany,
-      status: 'Pending',
       topic,
       message,
+      status: 'Pending',
       created_at: new Date().toISOString()
     };
-    setMentorshipRequests(prev => [newReq, ...prev]);
+
+    setMentorshipRequests(prev => [req, ...prev]);
   };
 
   const updateMentorshipStatus = (requestId: string, status: 'Accepted' | 'Rejected') => {
@@ -240,32 +236,33 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const registerForEvent = (eventId: string) => {
-    setEvents(prev => prev.map(ev => {
-      if (ev.id === eventId) {
-        const isRegistered = !ev.is_registered;
+    setEvents(prev => prev.map(e => {
+      if (e.id === eventId) {
+        const isRegistered = !e.is_registered;
         return {
-          ...ev,
+          ...e,
           is_registered: isRegistered,
-          registered_count: (ev.registered_count || 0) + (isRegistered ? 1 : -1)
+          registered_count: isRegistered ? (e.registered_count || 0) + 1 : Math.max(0, (e.registered_count || 0) - 1)
         };
       }
-      return ev;
+      return e;
     }));
   };
 
   const bookAppointment = (facultyId: string, facultyName: string, date: string, topic: string) => {
-    const newApt: Appointment = {
+    if (!profile) return;
+    const apt: AppointmentRecord = {
       id: `apt-${Date.now()}`,
-      student_id: currentUser?.id || 'usr-student-1',
-      student_name: profile?.full_name || 'Student User',
+      student_id: profile.user_id,
+      student_name: profile.full_name,
       faculty_id: facultyId,
       faculty_name: facultyName,
       appointment_date: date,
       topic,
-      status: 'Scheduled',
-      created_at: new Date().toISOString()
+      status: 'Requested'
     };
-    setAppointments(prev => [newApt, ...prev]);
+
+    setAppointments(prev => [apt, ...prev]);
   };
 
   const markNotificationRead = (id: string) => {
@@ -294,6 +291,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       switchRole,
       loginWithSupabase,
       signUpWithSupabase,
+      updateUserProfile,
       logout,
       applyForJob,
       postJob,
@@ -311,8 +309,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
 export const useAuth = () => {
   const context = useContext(AuthContext);
-  if (!context) {
-    throw new Error('useAuth must be used within an AuthProvider');
-  }
+  if (!context) throw new Error('useAuth must be used within an AuthProvider');
   return context;
 };
