@@ -56,13 +56,30 @@ export const AlumniDashboard: React.FC = () => {
 
           <button
             onClick={() => setShowPostModal(true)}
-            className="px-5 py-3 rounded-xl bg-zinc-900 hover:bg-zinc-800 text-white font-bold text-xs shadow-md flex items-center gap-2"
+            className="px-4 py-2.5 rounded-xl bg-zinc-900 hover:bg-zinc-800 text-white font-bold text-xs shadow-md flex items-center gap-2 transition flex-shrink-0"
           >
-            <PlusCircle className="w-4 h-4 text-orange-400" />
-            Post Job Referral for CSE Students
+            <PlusCircle className="w-4 h-4 text-orange-400" /> Post Job Opening
           </button>
         </div>
       </div>
+
+      {/* Pending Institutional Verification Alert Banner */}
+      {profile?.verification_status === 'pending' && (
+        <div className="bg-amber-50 border border-amber-300 rounded-2xl p-4 sm:p-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 text-xs shadow-xs">
+          <div className="space-y-1">
+            <h4 className="font-extrabold text-amber-950 flex items-center gap-2 text-sm">
+              <span className="w-2.5 h-2.5 rounded-full bg-amber-500 animate-ping" />
+              Institutional Alumni Account Pending Admin Verification
+            </h4>
+            <p className="text-amber-800 leading-relaxed max-w-2xl">
+              Your alumni registration (IUB ID: <strong>{profile?.iub_id || '1910123'}</strong>, Convocation: <strong>{profile?.convocation_number || '23rd Convocation'}</strong>) is currently undergoing Admin review. Full directory features will unlock upon approval.
+            </p>
+          </div>
+          <span className="px-3 py-1 rounded-full bg-amber-200 text-amber-900 font-extrabold text-[11px] whitespace-nowrap">
+            Verification Pending
+          </span>
+        </div>
+      )}
 
       {/* Stats Meter */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">

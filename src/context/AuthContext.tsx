@@ -37,7 +37,18 @@ interface AuthContextType {
     mobile: string;
     country: string;
     location: string;
-  }) => Promise<boolean>;
+    iubId?: string;
+    iubEmail?: string;
+    school?: string;
+    department?: string;
+    batch?: string;
+    graduationYear?: string;
+    convocationNumber?: string;
+    currentCompany?: string;
+    currentPosition?: string;
+  }) => Promise<{ success: boolean; message?: string }>;
+  approveAlumni: (userId: string) => void;
+  rejectAlumni: (userId: string) => void;
   updateUserProfile: (updatedData: Partial<UserProfile>) => void;
   logout: () => void;
   applyForJob: (jobId: string, coverLetter: string, isInternship?: boolean) => void;
@@ -120,11 +131,33 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     mobile: string;
     country: string;
     location: string;
-  }): Promise<boolean> => {
+    iubId?: string;
+    iubEmail?: string;
+    school?: string;
+    department?: string;
+    batch?: string;
+    graduationYear?: string;
+    convocationNumber?: string;
+    currentCompany?: string;
+    currentPosition?: string;
+  }): Promise<{ success: boolean; message?: string }> => {
     setIsLoading(true);
     try {
+      // 1. Validation for Student
+      if (data.role === 'student') {
+        if (data.iubId && !/^\d{7}$/.test(data.iubId.trim())) {
+          setIsLoading(false);
+          return { success: false, message: 'IUB ID must be a valid 7-digit number (e.g. 2220145).' };
+        }
+        if (data.iubEmail && !data.iubEmail.toLowerCase().trim().endsWith('@iub.edu.bd')) {
+          setIsLoading(false);
+          return { success: false, message: 'Student email must end with @iub.edu.bd domain.' };
+        }
+      }
+
       const newUserId = `usr-${data.role}-${Date.now()}`;
       const fullName = `${data.firstName} ${data.lastName}`.trim();
+      const isAlumniPending = data.role === 'alumni';
 
       const newProfile: UserProfile = {
         id: `prof-${Date.now()}`,
@@ -138,21 +171,75 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         phone: data.mobile,
         country: data.country,
         location: data.location,
-        bio: `CSE ${data.role} profile created on AlumniConnect.`,
+        iub_id: data.iubId,
+        iub_email: data.iubEmail || (data.email.endsWith('@iub.edu.bd') ? data.email : undefined),
+        school: data.school || 'SETS',
+        department: data.department || 'CSE',
+        batch_year: data.batch || data.graduationYear || '2026',
+        convocation_number: data.convocationNumber,
+        verification_status: isAlumniPending ? 'pending' : 'verified',
+        account_status: 'active',
+        bio: `IUB ${data.school || 'SETS'} ${data.role} profile created on AlumniConnect.`,
+        alumni_preferences: {
+          current_title: data.currentPosition || 'Software Engineer',
+          current_company: data.currentCompany || 'Tech Enterprise',
+          can_help_with: ['Career Guidance', 'Job Referrals'],
+          looking_for: ['Networking', 'Job Opportunities']
+        },
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString()
       };
+
+      // If Alumni, add to mock alumni directory as pending/verified
+      if (data.role === 'alumni') {
+        const newAlum = {
+          id: `alm-${Date.now()}`,
+          user_id: newUserId,
+          name: fullName,
+          company: data.currentCompany || 'Pending Verification Company',
+          position: data.currentPosition || 'Alumnus',
+          graduation_year: parseInt(data.graduationYear || '2022', 10),
+          experience: '3+ Years',
+          country: data.country || 'Bangladesh',
+          city: data.location || 'Dhaka',
+          email: data.email,
+          photo: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=300&q=80',
+          mentor: false,
+          verification_status: 'pending' as const
+        };
+        setAlumniProfiles(prev => [newAlum as any, ...prev]);
+      }
 
       setCurrentRole(data.role);
       setCurrentUser({ id: newUserId, email: data.email });
       setProfile(newProfile);
 
       setIsLoading(false);
-      return true;
+      return { 
+        success: true, 
+        message: isAlumniPending 
+          ? 'Registration successful! Your alumni account is pending Admin Verification.' 
+          : 'Registration successful!' 
+      };
     } catch (err) {
       console.error(err);
       setIsLoading(false);
-      return false;
+      return { success: false, message: 'An unexpected error occurred during signup.' };
+    }
+  };
+
+  // Admin Verification Methods
+  const approveAlumni = (userId: string) => {
+    setAlumniProfiles(prev => prev.map(a => a.user_id === userId ? { ...a, verification_status: 'verified' as any } : a));
+    if (profile && profile.user_id === userId) {
+      setProfile(prev => prev ? { ...prev, verification_status: 'verified' } : null);
+    }
+  };
+
+  const rejectAlumni = (userId: string) => {
+    setAlumniProfiles(prev => prev.map(a => a.user_id === userId ? { ...a, verification_status: 'rejected' as any } : a));
+    if (profile && profile.user_id === userId) {
+      setProfile(prev => prev ? { ...prev, verification_status: 'rejected' } : null);
     }
   };
 
@@ -291,6 +378,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       switchRole,
       loginWithSupabase,
       signUpWithSupabase,
+      approveAlumni,
+      rejectAlumni,
       updateUserProfile,
       logout,
       applyForJob,

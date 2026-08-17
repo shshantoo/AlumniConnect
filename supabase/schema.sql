@@ -10,11 +10,15 @@ CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 CREATE TABLE IF NOT EXISTS public.users (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     email VARCHAR(255) UNIQUE NOT NULL,
+    iub_email VARCHAR(255) UNIQUE,
+    iub_id VARCHAR(20) UNIQUE,
     username VARCHAR(100) UNIQUE,
     first_name VARCHAR(100),
     last_name VARCHAR(100),
     mobile VARCHAR(50),
     role VARCHAR(50) NOT NULL CHECK (role IN ('student', 'alumni', 'employer', 'faculty', 'admin')),
+    verification_status VARCHAR(50) DEFAULT 'pending' CHECK (verification_status IN ('pending', 'verified', 'rejected')),
+    account_status VARCHAR(50) DEFAULT 'active' CHECK (account_status IN ('active', 'pending', 'suspended')),
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
 
@@ -25,6 +29,12 @@ CREATE TABLE IF NOT EXISTS public.profiles (
     full_name VARCHAR(255) NOT NULL,
     first_name VARCHAR(100),
     last_name VARCHAR(100),
+    iub_id VARCHAR(20),
+    iub_email VARCHAR(255),
+    school VARCHAR(255) DEFAULT 'SETS',
+    convocation_number VARCHAR(100),
+    verification_status VARCHAR(50) DEFAULT 'pending',
+    account_status VARCHAR(50) DEFAULT 'active',
     username VARCHAR(100),
     preferred_name VARCHAR(100),
     headline VARCHAR(255),

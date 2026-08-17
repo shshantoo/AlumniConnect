@@ -29,6 +29,14 @@ export interface UserProfile {
     other?: string;
   };
   
+  // University & Institutional Identity (IUB Validated)
+  iub_id?: string; // 7-Digit Numerical IUB ID
+  iub_email?: string; // @iub.edu.bd Email
+  school?: string; // e.g. SETS, SBE, SLASS, SPHS
+  convocation_number?: string; // e.g. 23rd Convocation
+  verification_status?: 'pending' | 'verified' | 'rejected';
+  account_status?: 'active' | 'pending' | 'suspended';
+
   // University & Alumni Info
   university?: string;
   student_id?: string;

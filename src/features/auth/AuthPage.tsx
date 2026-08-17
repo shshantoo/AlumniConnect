@@ -1,339 +1,668 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { UserRole } from '../../types/database.types';
 import { 
   GraduationCap, Briefcase, Building2, BookOpen, ShieldCheck, 
-  Mail, Lock, ArrowRight, User, Phone, MapPin, Globe, AtSign, CheckCircle2 
+  Lock, Mail, User, Phone, MapPin, Globe, ArrowRight, Sparkles, 
+  CheckCircle2, AlertCircle, Eye, EyeOff, ShieldAlert, KeyRound, Clock
 } from 'lucide-react';
-
-const ROLES: { id: UserRole; label: string; desc: string; icon: React.FC<{ className?: string }> }[] = [
-  { id: 'student', label: 'Student', desc: 'Enrolled CSE Student seeking internships, mentors & jobs', icon: GraduationCap },
-  { id: 'alumni', label: 'Alumni', desc: 'CSE Graduate offering mentorship & company referrals', icon: Briefcase },
-  { id: 'employer', label: 'Employer', desc: 'Corporate hiring team posting tech jobs & viewing applicants', icon: Building2 },
-  { id: 'faculty', label: 'Faculty', desc: 'Department Head & Advisors managing counseling slots', icon: BookOpen },
-  { id: 'admin', label: 'Admin', desc: 'System governance, user approvals & platform analytics', icon: ShieldCheck },
-];
 
 export const AuthPage: React.FC = () => {
   const { loginWithSupabase, signUpWithSupabase, switchRole } = useAuth();
-  const [isSignUp, setIsSignUp] = useState(false);
+  const [isSignIn, setIsSignIn] = useState(true);
   const [selectedRole, setSelectedRole] = useState<UserRole>('student');
-  
-  // Login State
-  const [loginIdentifier, setLoginIdentifier] = useState(''); // Username or Email
-  const [loginPassword, setLoginPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
+  const [errorMsg, setErrorMsg] = useState('');
+  const [successMsg, setSuccessMsg] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // Sign Up Fields
-  const [firstName, setFirstName] = useState('');
-  const [lastName, setLastName] = useState('');
-  const [username, setUsername] = useState('');
-  const [email, setEmail] = useState('');
-  const [mobile, setMobile] = useState('');
-  const [country, setCountry] = useState('Bangladesh');
-  const [location, setLocation] = useState('Dhaka');
-  const [password, setPassword] = useState('');
-  const [loading, setLoading] = useState(false);
-  const navigate = useNavigate();
+  // Forgot Password Modal State
+  const [isForgotPasswordOpen, setIsForgotPasswordOpen] = useState(false);
+  const [forgotEmail, setForgotEmail] = useState('');
+  const [forgotStep, setForgotStep] = useState<1 | 2>(1);
+  const [resetCode, setResetCode] = useState('');
+  const [newPassword, setNewPassword] = useState('');
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setLoading(true);
+  // Sign In Form State
+  const [signInIdentifier, setSignInIdentifier] = useState('');
+  const [signInPassword, setSignInPassword] = useState('');
 
-    if (isSignUp) {
-      const ok = await signUpWithSupabase({
-        email,
-        password,
-        role: selectedRole,
-        firstName,
-        lastName,
-        username,
-        mobile,
-        country,
-        location
-      });
-      if (ok) navigate(`/dashboard/${selectedRole}`);
-    } else {
-      const ok = await loginWithSupabase(loginIdentifier, selectedRole);
-      if (ok) navigate(`/dashboard/${selectedRole}`);
-    }
-    setLoading(false);
+  // Sign Up Form State (Validated Student & Alumni IUB Registration)
+  const [signUpForm, setSignUpForm] = useState({
+    firstName: '',
+    lastName: '',
+    username: '',
+    email: '',
+    iubEmail: '',
+    iubId: '',
+    mobile: '',
+    school: 'SETS',
+    department: 'CSE',
+    batch: '2026',
+    graduationYear: '2022',
+    convocationNumber: '23rd Convocation',
+    currentCompany: '',
+    currentPosition: '',
+    country: 'Bangladesh',
+    location: 'Dhaka',
+    password: '',
+    confirmPassword: ''
+  });
+
+  // Calculate Password Strength Score (0 to 100)
+  const calculatePasswordStrength = (pwd: string) => {
+    let score = 0;
+    if (!pwd) return score;
+    if (pwd.length >= 8) score += 25;
+    if (/[A-Z]/.test(pwd)) score += 25;
+    if (/[0-9]/.test(pwd)) score += 25;
+    if (/[^A-Za-z0-9]/.test(pwd)) score += 25;
+    return score;
   };
 
-  const handleQuickDemo = (role: UserRole) => {
+  const passwordStrength = calculatePasswordStrength(signUpForm.password);
+
+  const getStrengthLabel = (score: number) => {
+    if (score === 0) return { label: 'Empty', color: 'bg-zinc-200', text: 'text-zinc-400' };
+    if (score <= 25) return { label: 'Weak', color: 'bg-rose-500', text: 'text-rose-600' };
+    if (score <= 50) return { label: 'Medium', color: 'bg-amber-500', text: 'text-amber-600' };
+    if (score <= 75) return { label: 'Strong', color: 'bg-emerald-500', text: 'text-emerald-600' };
+    return { label: 'Excellent', color: 'bg-[#ff5500]', text: 'text-[#ff5500]' };
+  };
+
+  const strengthMeta = getStrengthLabel(passwordStrength);
+
+  // Handle Quick Demo Login
+  const handleQuickDemoLogin = async (role: UserRole) => {
     switchRole(role);
-    navigate(`/dashboard/${role}`);
+    await loginWithSupabase(`demo.${role}@iub.edu.bd`, role);
+  };
+
+  // Handle Sign In Submit
+  const handleSignInSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setErrorMsg('');
+    setSuccessMsg('');
+    setIsSubmitting(true);
+
+    if (!signInIdentifier || !signInPassword) {
+      setErrorMsg('Please enter your Username/Email and password.');
+      setIsSubmitting(false);
+      return;
+    }
+
+    const success = await loginWithSupabase(signInIdentifier, selectedRole);
+    if (success) {
+      setSuccessMsg('Sign in successful! Redirecting...');
+    } else {
+      setErrorMsg('Invalid credentials. Try quick demo sign in buttons below!');
+    }
+    setIsSubmitting(false);
+  };
+
+  // Handle Sign Up Submit
+  const handleSignUpSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setErrorMsg('');
+    setSuccessMsg('');
+    setIsSubmitting(true);
+
+    // Validation 1: Password match
+    if (signUpForm.password !== signUpForm.confirmPassword) {
+      setErrorMsg('Passwords do not match.');
+      setIsSubmitting(false);
+      return;
+    }
+
+    // Validation 2: Student 7-digit IUB ID & @iub.edu.bd email check
+    if (selectedRole === 'student') {
+      if (!/^\d{7}$/.test(signUpForm.iubId.trim())) {
+        setErrorMsg('Validation Error: Student IUB ID must be a valid 7-digit number (e.g. 2220145).');
+        setIsSubmitting(false);
+        return;
+      }
+
+      const emailToCheck = signUpForm.iubEmail || signUpForm.email;
+      if (!emailToCheck.toLowerCase().trim().endsWith('@iub.edu.bd')) {
+        setErrorMsg('Validation Error: Student email must end with @iub.edu.bd domain.');
+        setIsSubmitting(false);
+        return;
+      }
+    }
+
+    // Validation 3: Alumni 7-digit IUB ID check
+    if (selectedRole === 'alumni') {
+      if (!/^\d{7}$/.test(signUpForm.iubId.trim())) {
+        setErrorMsg('Validation Error: Alumni IUB ID must be a valid 7-digit number (e.g. 1910123).');
+        setIsSubmitting(false);
+        return;
+      }
+    }
+
+    const res = await signUpWithSupabase({
+      email: signUpForm.email || `${signUpForm.iubId}@iub.edu.bd`,
+      password: signUpForm.password,
+      role: selectedRole,
+      firstName: signUpForm.firstName,
+      lastName: signUpForm.lastName,
+      username: signUpForm.username || `user_${Date.now().toString().slice(-4)}`,
+      mobile: signUpForm.mobile,
+      country: signUpForm.country,
+      location: signUpForm.location,
+      iubId: signUpForm.iubId,
+      iubEmail: signUpForm.iubEmail,
+      school: signUpForm.school,
+      department: signUpForm.department,
+      batch: signUpForm.batch,
+      graduationYear: signUpForm.graduationYear,
+      convocationNumber: signUpForm.convocationNumber,
+      currentCompany: signUpForm.currentCompany,
+      currentPosition: signUpForm.currentPosition
+    });
+
+    if (res.success) {
+      setSuccessMsg(res.message || 'Account created successfully!');
+    } else {
+      setErrorMsg(res.message || 'Registration failed.');
+    }
+    setIsSubmitting(false);
   };
 
   return (
-    <div className="min-h-[85vh] flex items-center justify-center py-8 px-4">
-      <div className="w-full max-w-4xl grid grid-cols-1 lg:grid-cols-2 gap-10 items-center">
-        
-        {/* Left Side: Brand Showcase */}
-        <div className="space-y-6 lg:pr-4">
-          <div>
-            <span className="taste-pill">
-              <span className="w-2 h-2 rounded-full bg-[#ff5500] animate-pulse" />
-              <span>v2 (experimental) just shipped</span>
-              <span className="text-[#ff5500] font-semibold">→</span>
-            </span>
-          </div>
-          
-          <h1 className="text-4xl sm:text-5xl font-extrabold text-[#0a0a0a] tracking-tight">
-            Alumni<span className="text-[#ff5500]">Connect</span>
-          </h1>
-
-          <p className="font-serif text-2xl sm:text-3xl text-zinc-800 tracking-tight font-normal leading-snug">
-            The Anti-Slop Alumni Network & Interactive CV Engine
-          </p>
-
-          <p className="text-[#ff5500] font-semibold text-lg">
-            Less slop, real connections pop.
-          </p>
-
-          <p className="text-zinc-600 text-xs sm:text-sm leading-relaxed font-normal">
-            Unified portal connecting Computer Science & Engineering students, alumni tech leaders, corporate hiring teams, and department faculty.
-          </p>
-
-          {/* Quick Demo Logins Box */}
-          <div className="taste-card p-4 space-y-2.5">
-            <p className="text-xs font-bold text-zinc-900 flex items-center gap-1.5">
-              <CheckCircle2 className="w-4 h-4 text-emerald-600" /> 1-Click Instant Persona Switches:
-            </p>
-            <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-              {ROLES.map((r) => {
-                const Icon = r.icon;
-                return (
-                  <button
-                    key={r.id}
-                    onClick={() => handleQuickDemo(r.id)}
-                    className="p-2 rounded-xl bg-[#f8f6f0] border border-[#e5e0d5] hover:border-[#ff945e] hover:bg-white text-zinc-800 transition text-xs font-bold flex items-center gap-2 text-left"
-                  >
-                    <Icon className="w-4 h-4 text-[#ff5500] flex-shrink-0" />
-                    <span className="truncate">{r.label}</span>
-                  </button>
-                );
-              })}
-            </div>
-          </div>
+    <div className="max-w-4xl mx-auto py-6 space-y-8 animate-fadeIn">
+      
+      {/* Top Identity Header Banner */}
+      <div className="text-center space-y-2">
+        <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-[#fce8d5] border border-[#f8cbb0] text-zinc-950 text-xs font-semibold">
+          <GraduationCap className="w-4 h-4 text-[#ff5500]" />
+          <span>Independent University, Bangladesh (IUB) Institutional Portal</span>
         </div>
+        <h1 className="text-3xl font-extrabold text-[#0a0a0a] tracking-tight">
+          AlumniConnect Institutional Authentication
+        </h1>
+        <p className="text-xs text-zinc-600 max-w-lg mx-auto">
+          Sign in or create your validated Student / Alumni account using your 7-Digit IUB ID & @iub.edu.bd email.
+        </p>
+      </div>
 
-        {/* Right Side: Auth Form */}
-        <div className="taste-card p-6 sm:p-8 space-y-6 shadow-md relative">
-          <div className="flex items-center justify-between border-b border-zinc-100 pb-4">
-            <div>
-              <h2 className="text-xl font-extrabold text-[#0a0a0a]">
-                {isSignUp ? 'Create Account' : 'Sign In'}
-              </h2>
-              <p className="text-xs text-zinc-500 font-medium">
-                {isSignUp ? 'Enter your basic details to get started' : 'Sign in using Username or Email'}
-              </p>
-            </div>
-
+      {/* Role Selection Tabs */}
+      <div className="taste-card p-2 flex items-center justify-center gap-2 overflow-x-auto scrollbar-none">
+        {[
+          { id: 'student', label: 'Student', icon: GraduationCap },
+          { id: 'alumni', label: 'Alumni', icon: Briefcase },
+          { id: 'employer', label: 'Employer', icon: Building2 },
+          { id: 'faculty', label: 'Faculty', icon: BookOpen },
+          { id: 'admin', label: 'Admin', icon: ShieldCheck },
+        ].map(tab => {
+          const Icon = tab.icon;
+          const isActive = selectedRole === tab.id;
+          return (
             <button
-              onClick={() => setIsSignUp(!isSignUp)}
-              className="text-xs font-bold text-[#ff5500] hover:underline transition"
+              key={tab.id}
+              onClick={() => {
+                setSelectedRole(tab.id as UserRole);
+                switchRole(tab.id as UserRole);
+              }}
+              className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition whitespace-nowrap ${
+                isActive
+                  ? 'bg-[#0a0a0a] text-white shadow-sm'
+                  : 'bg-[#f8f6f0] text-zinc-700 hover:bg-[#f0ede6] border border-[#e5e0d5]'
+              }`}
             >
-              {isSignUp ? 'Already have account? Sign In' : 'Need account? Sign Up'}
+              <Icon className={`w-4 h-4 ${isActive ? 'text-[#ff5500]' : 'text-zinc-500'}`} />
+              {tab.label} Portal
+            </button>
+          );
+        })}
+      </div>
+
+      {/* Authentication Card */}
+      <div className="taste-card p-6 sm:p-8 space-y-6 max-w-2xl mx-auto border border-[#e5e0d5] bg-white">
+        
+        {/* Toggle Sign In vs Sign Up */}
+        <div className="flex items-center justify-between border-b border-zinc-200 pb-4">
+          <div className="flex items-center gap-4">
+            <button
+              onClick={() => setIsSignIn(true)}
+              className={`text-base font-extrabold pb-1 transition border-b-2 ${
+                isSignIn ? 'border-[#ff5500] text-[#0a0a0a]' : 'border-transparent text-zinc-400'
+              }`}
+            >
+              Sign In
+            </button>
+            <button
+              onClick={() => setIsSignIn(false)}
+              className={`text-base font-extrabold pb-1 transition border-b-2 ${
+                !isSignIn ? 'border-[#ff5500] text-[#0a0a0a]' : 'border-transparent text-zinc-400'
+              }`}
+            >
+              Register Account
             </button>
           </div>
 
-          <form onSubmit={handleSubmit} className="space-y-4">
-            
-            {/* Role Selection */}
+          <span className="text-xs font-semibold text-[#ff5500] capitalize bg-[#fce8d5] px-3 py-1 rounded-full">
+            {selectedRole} Mode
+          </span>
+        </div>
+
+        {/* Notifications & Alert Messages */}
+        {errorMsg && (
+          <div className="p-3.5 rounded-xl bg-rose-50 border border-rose-200 text-rose-700 text-xs flex items-center gap-2 font-medium">
+            <AlertCircle className="w-4 h-4 flex-shrink-0" />
+            <span>{errorMsg}</span>
+          </div>
+        )}
+
+        {successMsg && (
+          <div className="p-3.5 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs flex items-center gap-2 font-medium">
+            <CheckCircle2 className="w-4 h-4 flex-shrink-0 text-emerald-600" />
+            <span>{successMsg}</span>
+          </div>
+        )}
+
+        {/* Alumni Institutional Pending Verification Info Banner */}
+        {!isSignIn && selectedRole === 'alumni' && (
+          <div className="p-3.5 rounded-xl bg-amber-50 border border-amber-200 text-amber-900 text-xs space-y-1">
+            <p className="font-bold flex items-center gap-1.5 text-amber-800">
+              <Clock className="w-4 h-4 text-amber-600" /> Institutional Alumni Verification Required
+            </p>
+            <p className="text-[11px] text-amber-700 leading-relaxed">
+              Upon submitting registration, your alumni profile will enter <strong>Pending Verification</strong> status. An Administrator will verify your 7-digit IUB ID & Convocation Number before granting full alumni directory access.
+            </p>
+          </div>
+        )}
+
+        {/* FORM 1: SIGN IN */}
+        {isSignIn ? (
+          <form onSubmit={handleSignInSubmit} className="space-y-4 text-xs">
             <div>
-              <label className="block text-xs font-bold text-zinc-800 mb-2">Select User Role</label>
-              <div className="grid grid-cols-3 gap-2">
-                {ROLES.slice(0, 3).map((r) => (
-                  <button
-                    key={r.id}
-                    type="button"
-                    onClick={() => setSelectedRole(r.id)}
-                    className={`p-2.5 rounded-xl border text-xs font-bold transition text-center capitalize ${
-                      selectedRole === r.id
-                        ? 'bg-[#0a0a0a] border-[#0a0a0a] text-white shadow-xs'
-                        : 'bg-[#f8f6f0] border-[#e5e0d5] text-zinc-700 hover:bg-zinc-100'
-                    }`}
-                  >
-                    {r.label}
-                  </button>
-                ))}
+              <label className="block font-bold mb-1 text-zinc-900">Username, Email, or 7-Digit IUB ID *</label>
+              <div className="relative">
+                <Mail className="w-4 h-4 text-zinc-400 absolute left-3 top-1/2 -translate-y-1/2" />
+                <input
+                  type="text"
+                  placeholder="e.g. shshantoo, student@iub.edu.bd, or 2220145"
+                  value={signInIdentifier}
+                  onChange={(e) => setSignInIdentifier(e.target.value)}
+                  className="w-full bg-[#f8f6f0] border border-[#e5e0d5] rounded-xl pl-9 pr-4 py-2.5 text-xs text-zinc-900 focus:outline-none focus:border-[#ff5500]"
+                />
               </div>
             </div>
 
-            {/* LOGIN FORM: Username or Email + Password */}
-            {!isSignUp ? (
-              <>
+            <div>
+              <div className="flex items-center justify-between mb-1">
+                <label className="font-bold text-zinc-900">Password *</label>
+                <button
+                  type="button"
+                  onClick={() => setIsForgotPasswordOpen(true)}
+                  className="text-xs text-[#ff5500] font-semibold hover:underline"
+                >
+                  Forgot Password?
+                </button>
+              </div>
+              <div className="relative">
+                <Lock className="w-4 h-4 text-zinc-400 absolute left-3 top-1/2 -translate-y-1/2" />
+                <input
+                  type={showPassword ? 'text' : 'password'}
+                  placeholder="••••••••"
+                  value={signInPassword}
+                  onChange={(e) => setSignInPassword(e.target.value)}
+                  className="w-full bg-[#f8f6f0] border border-[#e5e0d5] rounded-xl pl-9 pr-10 py-2.5 text-xs text-zinc-900 focus:outline-none focus:border-[#ff5500]"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-zinc-600"
+                >
+                  {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                </button>
+              </div>
+            </div>
+
+            <button
+              type="submit"
+              disabled={isSubmitting}
+              className="btn-black w-full py-3 text-xs font-extrabold flex items-center justify-center gap-2 shadow-md disabled:opacity-50 mt-2"
+            >
+              Sign In to {selectedRole.toUpperCase()} Portal <ArrowRight className="w-4 h-4 text-[#ff5500]" />
+            </button>
+          </form>
+        ) : (
+          /* FORM 2: SIGN UP WITH IUB VALIDATION */
+          <form onSubmit={handleSignUpSubmit} className="space-y-4 text-xs">
+            
+            {/* First & Last Name */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div>
+                <label className="block font-bold mb-1">First Name *</label>
+                <input
+                  type="text"
+                  required
+                  placeholder="e.g. Shanto"
+                  value={signUpForm.firstName}
+                  onChange={(e) => setSignUpForm({ ...signUpForm, firstName: e.target.value })}
+                  className="w-full bg-[#f8f6f0] border border-[#e5e0d5] rounded-xl p-2.5 text-xs text-zinc-900 focus:outline-none focus:border-[#ff5500]"
+                />
+              </div>
+              <div>
+                <label className="block font-bold mb-1">Last Name *</label>
+                <input
+                  type="text"
+                  required
+                  placeholder="e.g. Rahman"
+                  value={signUpForm.lastName}
+                  onChange={(e) => setSignUpForm({ ...signUpForm, lastName: e.target.value })}
+                  className="w-full bg-[#f8f6f0] border border-[#e5e0d5] rounded-xl p-2.5 text-xs text-zinc-900 focus:outline-none focus:border-[#ff5500]"
+                />
+              </div>
+            </div>
+
+            {/* IUB ID & Email Validation Section */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div>
+                <label className="block font-bold mb-1">
+                  7-Digit IUB ID * {selectedRole === 'student' && <span className="text-[#ff5500] text-[10px]">(e.g. 2220145)</span>}
+                </label>
+                <input
+                  type="text"
+                  required
+                  placeholder="e.g. 2220145"
+                  value={signUpForm.iubId}
+                  onChange={(e) => setSignUpForm({ ...signUpForm, iubId: e.target.value })}
+                  className="w-full bg-[#f8f6f0] border border-[#e5e0d5] rounded-xl p-2.5 text-xs text-zinc-900 focus:outline-none focus:border-[#ff5500]"
+                />
+              </div>
+
+              <div>
+                <label className="block font-bold mb-1">
+                  {selectedRole === 'student' ? 'Official IUB Email (@iub.edu.bd) *' : 'Email Address *'}
+                </label>
+                <input
+                  type="email"
+                  required
+                  placeholder={selectedRole === 'student' ? '2220145@iub.edu.bd' : 'alumni@company.com'}
+                  value={signUpForm.email}
+                  onChange={(e) => setSignUpForm({ ...signUpForm, email: e.target.value, iubEmail: e.target.value })}
+                  className="w-full bg-[#f8f6f0] border border-[#e5e0d5] rounded-xl p-2.5 text-xs text-zinc-900 focus:outline-none focus:border-[#ff5500]"
+                />
+              </div>
+            </div>
+
+            {/* Username & Mobile */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div>
+                <label className="block font-bold mb-1">Username *</label>
+                <input
+                  type="text"
+                  required
+                  placeholder="e.g. shshantoo"
+                  value={signUpForm.username}
+                  onChange={(e) => setSignUpForm({ ...signUpForm, username: e.target.value })}
+                  className="w-full bg-[#f8f6f0] border border-[#e5e0d5] rounded-xl p-2.5 text-xs text-zinc-900 focus:outline-none focus:border-[#ff5500]"
+                />
+              </div>
+              <div>
+                <label className="block font-bold mb-1">Mobile Number *</label>
+                <input
+                  type="text"
+                  required
+                  placeholder="+880 1700-123456"
+                  value={signUpForm.mobile}
+                  onChange={(e) => setSignUpForm({ ...signUpForm, mobile: e.target.value })}
+                  className="w-full bg-[#f8f6f0] border border-[#e5e0d5] rounded-xl p-2.5 text-xs text-zinc-900 focus:outline-none focus:border-[#ff5500]"
+                />
+              </div>
+            </div>
+
+            {/* School & Department Selectors */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div>
+                <label className="block font-bold mb-1">IUB School *</label>
+                <select
+                  value={signUpForm.school}
+                  onChange={(e) => setSignUpForm({ ...signUpForm, school: e.target.value })}
+                  className="w-full bg-[#f8f6f0] border border-[#e5e0d5] rounded-xl p-2.5 text-xs text-zinc-900 focus:outline-none focus:border-[#ff5500]"
+                >
+                  <option value="SETS">SETS - School of Engineering, Technology & Sciences</option>
+                  <option value="SBE">SBE - School of Business & Entrepreneurship</option>
+                  <option value="SLASS">SLASS - School of Liberal Arts & Social Sciences</option>
+                  <option value="SPHS">SPHS - School of Pharmacy & Public Health</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="block font-bold mb-1">Department *</label>
+                <select
+                  value={signUpForm.department}
+                  onChange={(e) => setSignUpForm({ ...signUpForm, department: e.target.value })}
+                  className="w-full bg-[#f8f6f0] border border-[#e5e0d5] rounded-xl p-2.5 text-xs text-zinc-900 focus:outline-none focus:border-[#ff5500]"
+                >
+                  <option value="CSE">CSE - Computer Science & Engineering</option>
+                  <option value="EEE">EEE - Electrical & Electronic Engineering</option>
+                  <option value="PS">Physical Sciences</option>
+                  <option value="BBA">BBA - Business Administration</option>
+                </select>
+              </div>
+            </div>
+
+            {/* Alumni Specific Fields: Graduation Year & Convocation Number */}
+            {selectedRole === 'alumni' && (
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 bg-[#f8f6f0] p-3 rounded-xl border border-[#e5e0d5]">
                 <div>
-                  <label className="block text-xs font-bold text-zinc-800 mb-1">Username or Email Address</label>
-                  <div className="relative">
-                    <AtSign className="w-4 h-4 text-zinc-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
-                    <input
-                      type="text"
-                      required
-                      placeholder="username or email@univ.edu"
-                      value={loginIdentifier}
-                      onChange={(e) => setLoginIdentifier(e.target.value)}
-                      className="w-full bg-white border border-[#e5e0d5] rounded-xl pl-10 pr-4 py-3 text-xs text-zinc-900 focus:outline-none focus:border-[#ff5500]"
-                    />
-                  </div>
+                  <label className="block font-bold mb-1">Graduation Year *</label>
+                  <select
+                    value={signUpForm.graduationYear}
+                    onChange={(e) => setSignUpForm({ ...signUpForm, graduationYear: e.target.value })}
+                    className="w-full bg-white border border-[#e5e0d5] rounded-xl p-2.5 text-xs text-zinc-900 focus:outline-none"
+                  >
+                    <option value="2024">2024</option>
+                    <option value="2023">2023</option>
+                    <option value="2022">2022</option>
+                    <option value="2021">2021</option>
+                    <option value="2020">2020</option>
+                    <option value="2019">2019</option>
+                    <option value="2018">2018</option>
+                  </select>
                 </div>
 
                 <div>
-                  <label className="block text-xs font-bold text-zinc-800 mb-1">Password</label>
-                  <div className="relative">
-                    <Lock className="w-4 h-4 text-zinc-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
-                    <input
-                      type="password"
-                      required
-                      placeholder="••••••••"
-                      value={loginPassword}
-                      onChange={(e) => setLoginPassword(e.target.value)}
-                      className="w-full bg-white border border-[#e5e0d5] rounded-xl pl-10 pr-4 py-3 text-xs text-zinc-900 focus:outline-none focus:border-[#ff5500]"
-                    />
-                  </div>
-                </div>
-              </>
-            ) : (
-              /* SIGNUP FORM: First Name, Last Name, Username, Mobile, Email, Country, Location */
-              <>
-                <div className="grid grid-cols-2 gap-3">
-                  <div>
-                    <label className="block text-xs font-bold text-zinc-800 mb-1">First Name *</label>
-                    <div className="relative">
-                      <User className="w-4 h-4 text-zinc-400 absolute left-3 top-1/2 -translate-y-1/2" />
-                      <input
-                        type="text"
-                        required
-                        placeholder="Shanto"
-                        value={firstName}
-                        onChange={(e) => setFirstName(e.target.value)}
-                        className="w-full bg-white border border-[#e5e0d5] rounded-xl pl-9 pr-3 py-2.5 text-xs text-zinc-900 focus:outline-none focus:border-[#ff5500]"
-                      />
-                    </div>
-                  </div>
-
-                  <div>
-                    <label className="block text-xs font-bold text-zinc-800 mb-1">Last Name *</label>
-                    <input
-                      type="text"
-                      required
-                      placeholder="Rahman"
-                      value={lastName}
-                      onChange={(e) => setLastName(e.target.value)}
-                      className="w-full bg-white border border-[#e5e0d5] rounded-xl px-3 py-2.5 text-xs text-zinc-900 focus:outline-none focus:border-[#ff5500]"
-                    />
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-2 gap-3">
-                  <div>
-                    <label className="block text-xs font-bold text-zinc-800 mb-1">Username *</label>
-                    <div className="relative">
-                      <AtSign className="w-4 h-4 text-zinc-400 absolute left-3 top-1/2 -translate-y-1/2" />
-                      <input
-                        type="text"
-                        required
-                        placeholder="shshantoo"
-                        value={username}
-                        onChange={(e) => setUsername(e.target.value)}
-                        className="w-full bg-white border border-[#e5e0d5] rounded-xl pl-9 pr-3 py-2.5 text-xs text-zinc-900 focus:outline-none focus:border-[#ff5500]"
-                      />
-                    </div>
-                  </div>
-
-                  <div>
-                    <label className="block text-xs font-bold text-zinc-800 mb-1">Mobile Number *</label>
-                    <div className="relative">
-                      <Phone className="w-4 h-4 text-zinc-400 absolute left-3 top-1/2 -translate-y-1/2" />
-                      <input
-                        type="text"
-                        required
-                        placeholder="+880 1700-000000"
-                        value={mobile}
-                        onChange={(e) => setMobile(e.target.value)}
-                        className="w-full bg-white border border-[#e5e0d5] rounded-xl pl-9 pr-3 py-2.5 text-xs text-zinc-900 focus:outline-none focus:border-[#ff5500]"
-                      />
-                    </div>
-                  </div>
+                  <label className="block font-bold mb-1">Convocation Number *</label>
+                  <select
+                    value={signUpForm.convocationNumber}
+                    onChange={(e) => setSignUpForm({ ...signUpForm, convocationNumber: e.target.value })}
+                    className="w-full bg-white border border-[#e5e0d5] rounded-xl p-2.5 text-xs text-zinc-900 focus:outline-none"
+                  >
+                    <option value="24th Convocation">24th Convocation (2024)</option>
+                    <option value="23rd Convocation">23rd Convocation (2023)</option>
+                    <option value="22nd Convocation">22nd Convocation (2022)</option>
+                    <option value="21st Convocation">21st Convocation (2021)</option>
+                  </select>
                 </div>
 
                 <div>
-                  <label className="block text-xs font-bold text-zinc-800 mb-1">Email Address *</label>
-                  <div className="relative">
-                    <Mail className="w-4 h-4 text-zinc-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
-                    <input
-                      type="email"
-                      required
-                      placeholder="student@univ.edu"
-                      value={email}
-                      onChange={(e) => setEmail(e.target.value)}
-                      className="w-full bg-white border border-[#e5e0d5] rounded-xl pl-10 pr-4 py-2.5 text-xs text-zinc-900 focus:outline-none focus:border-[#ff5500]"
-                    />
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-2 gap-3">
-                  <div>
-                    <label className="block text-xs font-bold text-zinc-800 mb-1">Country *</label>
-                    <div className="relative">
-                      <Globe className="w-4 h-4 text-zinc-400 absolute left-3 top-1/2 -translate-y-1/2" />
-                      <input
-                        type="text"
-                        required
-                        placeholder="Bangladesh"
-                        value={country}
-                        onChange={(e) => setCountry(e.target.value)}
-                        className="w-full bg-white border border-[#e5e0d5] rounded-xl pl-9 pr-3 py-2.5 text-xs text-zinc-900 focus:outline-none focus:border-[#ff5500]"
-                      />
-                    </div>
-                  </div>
-
-                  <div>
-                    <label className="block text-xs font-bold text-zinc-800 mb-1">Location / City *</label>
-                    <div className="relative">
-                      <MapPin className="w-4 h-4 text-zinc-400 absolute left-3 top-1/2 -translate-y-1/2" />
-                      <input
-                        type="text"
-                        required
-                        placeholder="Dhaka"
-                        value={location}
-                        onChange={(e) => setLocation(e.target.value)}
-                        className="w-full bg-white border border-[#e5e0d5] rounded-xl pl-9 pr-3 py-2.5 text-xs text-zinc-900 focus:outline-none focus:border-[#ff5500]"
-                      />
-                    </div>
-                  </div>
+                  <label className="block font-bold mb-1">Current Company</label>
+                  <input
+                    type="text"
+                    placeholder="e.g. Google / Microsoft / Grameenphone"
+                    value={signUpForm.currentCompany}
+                    onChange={(e) => setSignUpForm({ ...signUpForm, currentCompany: e.target.value })}
+                    className="w-full bg-white border border-[#e5e0d5] rounded-xl p-2.5 text-xs text-zinc-900"
+                  />
                 </div>
 
                 <div>
-                  <label className="block text-xs font-bold text-zinc-800 mb-1">Password *</label>
-                  <div className="relative">
-                    <Lock className="w-4 h-4 text-zinc-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
-                    <input
-                      type="password"
-                      required
-                      placeholder="••••••••"
-                      value={password}
-                      onChange={(e) => setPassword(e.target.value)}
-                      className="w-full bg-white border border-[#e5e0d5] rounded-xl pl-10 pr-4 py-2.5 text-xs text-zinc-900 focus:outline-none focus:border-[#ff5500]"
-                    />
-                  </div>
+                  <label className="block font-bold mb-1">Current Position</label>
+                  <input
+                    type="text"
+                    placeholder="e.g. Senior Software Engineer"
+                    value={signUpForm.currentPosition}
+                    onChange={(e) => setSignUpForm({ ...signUpForm, currentPosition: e.target.value })}
+                    className="w-full bg-white border border-[#e5e0d5] rounded-xl p-2.5 text-xs text-zinc-900"
+                  />
                 </div>
-              </>
+              </div>
+            )}
+
+            {/* Password & Confirm Password */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div>
+                <label className="block font-bold mb-1">Password *</label>
+                <input
+                  type="password"
+                  required
+                  placeholder="••••••••"
+                  value={signUpForm.password}
+                  onChange={(e) => setSignUpForm({ ...signUpForm, password: e.target.value })}
+                  className="w-full bg-[#f8f6f0] border border-[#e5e0d5] rounded-xl p-2.5 text-xs text-zinc-900 focus:outline-none focus:border-[#ff5500]"
+                />
+              </div>
+
+              <div>
+                <label className="block font-bold mb-1">Confirm Password *</label>
+                <input
+                  type="password"
+                  required
+                  placeholder="••••••••"
+                  value={signUpForm.confirmPassword}
+                  onChange={(e) => setSignUpForm({ ...signUpForm, confirmPassword: e.target.value })}
+                  className="w-full bg-[#f8f6f0] border border-[#e5e0d5] rounded-xl p-2.5 text-xs text-zinc-900 focus:outline-none focus:border-[#ff5500]"
+                />
+              </div>
+            </div>
+
+            {/* LIVE PASSWORD STRENGTH METER */}
+            {signUpForm.password && (
+              <div className="space-y-1.5 pt-1">
+                <div className="flex items-center justify-between text-[11px]">
+                  <span className="font-semibold text-zinc-600">Password Strength:</span>
+                  <span className={`font-bold ${strengthMeta.text}`}>{strengthMeta.label} ({passwordStrength}%)</span>
+                </div>
+                <div className="w-full h-1.5 bg-zinc-200 rounded-full overflow-hidden">
+                  <div 
+                    className={`h-full transition-all duration-300 ${strengthMeta.color}`} 
+                    style={{ width: `${passwordStrength}%` }}
+                  />
+                </div>
+                <p className="text-[10px] text-zinc-500">
+                  Tip: Include at least 8 characters, uppercase letters, numbers, and special symbols (!@#$).
+                </p>
+              </div>
             )}
 
             <button
               type="submit"
-              disabled={loading}
-              className="btn-black w-full py-3.5 text-xs flex items-center justify-center gap-2 shadow-md"
+              disabled={isSubmitting}
+              className="btn-black w-full py-3 text-xs font-extrabold flex items-center justify-center gap-2 shadow-md disabled:opacity-50 mt-2"
             >
-              {loading ? 'Processing...' : (isSignUp ? 'Complete Registration' : 'Sign In Now')}
-              <ArrowRight className="w-4 h-4 text-[#ff5500]" />
+              Complete {selectedRole.toUpperCase()} Registration <ArrowRight className="w-4 h-4 text-[#ff5500]" />
             </button>
           </form>
+        )}
+
+        {/* Quick Demo Role Switcher Shortcuts */}
+        <div className="pt-4 border-t border-zinc-100 space-y-2 text-center">
+          <p className="text-[11px] font-bold text-zinc-600 uppercase tracking-wider">Quick Demo Sign In Shortcuts</p>
+          <div className="flex flex-wrap items-center justify-center gap-2">
+            {[
+              { id: 'student', label: 'Student Persona' },
+              { id: 'alumni', label: 'Alumni Persona' },
+              { id: 'employer', label: 'Employer Persona' },
+              { id: 'faculty', label: 'Faculty Persona' },
+              { id: 'admin', label: 'Admin Portal' },
+            ].map(d => (
+              <button
+                key={d.id}
+                onClick={() => handleQuickDemoLogin(d.id as UserRole)}
+                className="px-3 py-1.5 rounded-lg bg-[#f8f6f0] border border-[#e5e0d5] text-zinc-800 font-semibold text-[11px] hover:bg-[#f0ede6] transition"
+              >
+                ⚡ {d.label}
+              </button>
+            ))}
+          </div>
         </div>
 
       </div>
+
+      {/* FORGOT PASSWORD MODAL */}
+      {isForgotPasswordOpen && (
+        <div className="fixed inset-0 bg-zinc-950/60 backdrop-blur-md z-50 flex items-center justify-center p-4">
+          <div className="bg-white border border-[#e5e0d5] rounded-3xl w-full max-w-md p-6 space-y-4 shadow-2xl animate-scaleUp text-xs text-zinc-900">
+            <div className="flex items-center justify-between border-b border-zinc-200 pb-3">
+              <h3 className="font-extrabold text-sm flex items-center gap-2">
+                <KeyRound className="w-4 h-4 text-[#ff5500]" /> Password Recovery Engine
+              </h3>
+              <button onClick={() => setIsForgotPasswordOpen(false)} className="text-zinc-500 hover:text-zinc-800">
+                ✕
+              </button>
+            </div>
+
+            {forgotStep === 1 ? (
+              <div className="space-y-3">
+                <p className="text-zinc-600 leading-relaxed">
+                  Enter your registered IUB Email or 7-Digit IUB ID. We will generate a 6-digit password verification code.
+                </p>
+                <div>
+                  <label className="block font-bold mb-1">Email or 7-Digit IUB ID</label>
+                  <input
+                    type="text"
+                    placeholder="e.g. 2220145@iub.edu.bd"
+                    value={forgotEmail}
+                    onChange={(e) => setForgotEmail(e.target.value)}
+                    className="w-full bg-[#f8f6f0] border border-[#e5e0d5] rounded-xl p-2.5 text-xs text-zinc-900"
+                  />
+                </div>
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (forgotEmail) setForgotStep(2);
+                  }}
+                  className="btn-black w-full py-2.5 text-xs font-bold"
+                >
+                  Send Verification Code
+                </button>
+              </div>
+            ) : (
+              <div className="space-y-3">
+                <p className="text-emerald-700 font-semibold">
+                  Verification code sent to {forgotEmail}! Enter code and new password.
+                </p>
+                <div>
+                  <label className="block font-bold mb-1">6-Digit Code</label>
+                  <input
+                    type="text"
+                    placeholder="e.g. 892014"
+                    value={resetCode}
+                    onChange={(e) => setResetCode(e.target.value)}
+                    className="w-full bg-[#f8f6f0] border border-[#e5e0d5] rounded-xl p-2.5 text-xs"
+                  />
+                </div>
+                <div>
+                  <label className="block font-bold mb-1">New Password</label>
+                  <input
+                    type="password"
+                    placeholder="••••••••"
+                    value={newPassword}
+                    onChange={(e) => setNewPassword(e.target.value)}
+                    className="w-full bg-[#f8f6f0] border border-[#e5e0d5] rounded-xl p-2.5 text-xs"
+                  />
+                </div>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setSuccessMsg('Password reset successfully! Please sign in with your new password.');
+                    setIsForgotPasswordOpen(false);
+                    setForgotStep(1);
+                  }}
+                  className="btn-black w-full py-2.5 text-xs font-bold"
+                >
+                  Update Password & Sign In
+                </button>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
     </div>
   );
 };
