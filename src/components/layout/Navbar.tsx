@@ -24,7 +24,7 @@ export const Navbar: React.FC<NavbarProps> = ({ onToggleSidebar }) => {
   };
 
   return (
-    <header className="bg-[#f8f6f0]/90 border-b border-[#e5e0d5] backdrop-blur-xl sticky top-[37px] z-40">
+    <header className="bg-[#f8f6f0]/90 border-b border-[#e5e0d5] backdrop-blur-xl sticky top-0 z-40">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between gap-4">
         
         {/* Left Section: Brand & Sidebar Toggle */}

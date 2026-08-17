@@ -4,7 +4,6 @@ import { AnimatePresence } from 'framer-motion';
 import { Navbar } from '../components/layout/Navbar';
 import { Sidebar } from '../components/layout/Sidebar';
 import { Footer } from '../components/layout/Footer';
-import { DemoRoleBar } from '../components/layout/DemoRoleBar';
 import { PageTransition } from '../components/common/PageTransition';
 
 import { AuthPage } from '../features/auth/AuthPage';
@@ -27,9 +26,6 @@ export const AppRoutes: React.FC = () => {
 
   return (
     <div className="min-h-screen flex flex-col bg-zinc-50 text-zinc-900">
-      {/* Top Demo Bar */}
-      <DemoRoleBar />
-
       {/* Main Navbar */}
       <Navbar onToggleSidebar={() => setSidebarOpen(!sidebarOpen)} />
 
