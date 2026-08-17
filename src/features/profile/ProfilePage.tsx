@@ -47,11 +47,13 @@ export const ProfilePage: React.FC = () => {
   return (
     <div className="space-y-8 max-w-5xl mx-auto">
       
-      {/* PROFILE COMPLETION PERCENTAGE RING */}
-      <ProfileCompletionRing
-        profile={profile}
-        onOpenCvBuilder={() => setIsCvBuilderOpen(true)}
-      />
+      {/* PROFILE COMPLETION PERCENTAGE RING (Student Only) */}
+      {currentRole === 'student' && (
+        <ProfileCompletionRing
+          profile={profile}
+          onOpenCvBuilder={() => setIsCvBuilderOpen(true)}
+        />
+      )}
 
       {/* Profile Header Card */}
       <div className="taste-card p-6 sm:p-8 space-y-6 relative overflow-hidden">
@@ -82,12 +84,14 @@ export const ProfilePage: React.FC = () => {
 
               {/* ACTION BUTTONS GROUP */}
               <div className="flex flex-wrap items-center gap-2 justify-center sm:justify-start lg:justify-end">
-                <button
-                  onClick={() => setIsCvBuilderOpen(true)}
-                  className="btn-black px-4 py-2 text-xs font-bold flex items-center gap-1.5 shadow-md"
-                >
-                  <Edit3 className="w-4 h-4 text-[#ff5500]" /> Launch CV Builder
-                </button>
+                {currentRole === 'student' && (
+                  <button
+                    onClick={() => setIsCvBuilderOpen(true)}
+                    className="btn-black px-4 py-2 text-xs font-bold flex items-center gap-1.5 shadow-md"
+                  >
+                    <Edit3 className="w-4 h-4 text-[#ff5500]" /> Launch CV Builder
+                  </button>
+                )}
 
                 <button
                   onClick={() => setIsPdfPreviewOpen(true)}
