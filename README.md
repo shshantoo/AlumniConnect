@@ -1,15 +1,46 @@
-# 🎓 AlumniConnect — CSE Department Alumni & Career Network
+# 🎓 AlumniConnect — University Alumni, Career & Placement Management Platform
 
-AlumniConnect is a startup-quality **CSE Web Application** designed to seamlessly connect Students, Alumni tech leaders, Corporate Hiring Employers, and Department Faculty.
+AlumniConnect is a comprehensive, enterprise-ready **University Alumni, Career & Placement Management Platform** designed to seamlessly bridge Students, Alumni leaders, Corporate Hiring Employers, University Faculty, and Career Services Administrators.
 
-Built with **React 19**, **Vite**, **TypeScript**, **Tailwind CSS**, **Supabase**, **MapLibre GL + OpenFreeMap**, **Recharts**, and **Framer Motion**.
+Built with **React 19**, **Vite**, **TypeScript**, **Tailwind CSS**, **Supabase (PostgreSQL & Storage)**, **MapLibre GL + OpenFreeMap**, `html2canvas` + `jspdf`, and **Framer Motion**.
+
+---
+
+## 🏛️ Overall System & Product Architecture
+
+AlumniConnect operates as **6 interconnected ecosystems** serving the entire university lifecycle from academic study to career placement and global alumni networking:
+
+```
+                         AlumniConnect
+                              │
+       ┌──────────────┬───────┼────────┬──────────────┐
+       │              │       │        │              │
+    Alumni         Student  Employer  Faculty       Admin
+       │              │       │        │              │
+       └──────────────┴───────┼────────┴──────────────┘
+                              │
+                    ┌─────────┴─────────┐
+                    │                   │
+              Career Center       Alumni Network
+                    │                   │
+              Jobs/Internships      Directory
+              Applications          Mentorship
+              Counseling            Alumni Map
+              Resume/CV             Events
+                    │                   │
+                    └─────────┬─────────┘
+                              │
+                         Notifications
+                              │
+                           Analytics
+```
 
 ---
 
 ## 🎨 Visual Identity & Taste System
 - **Theme**: Light Paper & Taste Skill Aesthetic (Shades of Warm White `#f8f6f0`, Electric Orange `#ff5500`, and Pitch Black `#0a0a0a`).
-- **Interactive Map**: Global Alumni Hubs rendered via **OpenFreeMap** and **MapLibre GL**.
-- **Role Portals**: Instant persona switching between **Student**, **Alumni**, **Employer**, **Faculty**, and **Admin**.
+- **Interactive Spatial Map**: Global Alumni Hubs rendered via **OpenFreeMap** and **MapLibre GL**.
+- **Role Portals**: Role-based access control for **Student**, **Alumni**, **Employer**, **Faculty**, and **Admin**.
 
 ---
 
@@ -59,60 +90,15 @@ To initialize the 20+ PostgreSQL database tables in your Supabase project:
 
 ---
 
-### 6. Run the Local Development Server
-Start the Vite development server:
+### 6. Run the Application Locally
+Launch the Vite development server:
 ```bash
 npm run dev
 ```
-Open your browser and navigate to:
-```text
-http://localhost:5173
-```
+Open your browser and navigate to `http://localhost:5173`.
 
 ---
 
-### 7. Build for Production
-To generate an optimized production bundle:
-```bash
-npm run build
-```
-The output files will be generated inside the `dist/` folder.
-
----
-
-## 🛠️ Project Architecture
-
-```
-AlumniConnect/
-├── .env                        # Supabase environment configuration
-├── index.html                  # HTML entry with MapLibre GL OpenFreeMap scripts
-├── package.json                # Dependencies & npm scripts
-├── vite.config.ts              # Vite config with path aliases & maplibre-gl optimizer rules
-├── tailwind.config.js          # Custom theme tokens (Cream, Taste Orange, Pitch Black)
-├── supabase/
-│   └── schema.sql              # Complete 20+ tables SQL schema & RLS policies
-└── src/
-    ├── main.tsx                # Entry point
-    ├── App.tsx                 # Root component with Supabase client test
-    ├── context/
-    │   └── AuthContext.tsx     # Role state, Supabase auth & interactive demo switcher
-    ├── features/
-    │   ├── auth/               # Unified Auth page & 1-click demo logins
-    │   ├── dashboard/          # Student, Alumni, Employer, Faculty, Admin dashboards
-    │   ├── directory/          # Alumni directory & OpenFreeMap vector map
-    │   ├── jobs/               # Job & Internship hub & application modals
-    │   ├── mentorship/         # 1-on-1 advisory session requests
-    │   ├── events/             # Hackathons, webinars & RSVP registration
-    │   ├── appointments/       # Faculty counseling scheduler
-    │   └── profile/            # User profile view & edit modal
-    ├── components/
-    │   ├── layout/             # DemoRoleBar, Navbar, Sidebar, Footer
-    │   └── common/             # PageTransition (Framer Motion wrapper)
-    └── styles/
-        └── globals.css         # Tailwind directives & Taste skill design tokens
-```
-
----
-
-## 📜 License
-Developed for CSE Web Application Project.
+## 📦 Production Deployment (GitHub Pages)
+The application is configured to automatically deploy to GitHub Pages via GitHub Actions (`.github/workflows/deploy.yml`):
+- **Live URL**: [https://shshantoo.github.io/AlumniConnect/](https://shshantoo.github.io/AlumniConnect/)
