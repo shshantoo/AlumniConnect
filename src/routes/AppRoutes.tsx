@@ -7,6 +7,7 @@ import { Sidebar } from '../components/layout/Sidebar';
 import { Footer } from '../components/layout/Footer';
 import { PageTransition } from '../components/common/PageTransition';
 
+import { HomePage } from '../features/home/HomePage';
 import { AuthPage } from '../features/auth/AuthPage';
 import { StudentDashboard } from '../features/dashboard/StudentDashboard';
 import { AlumniDashboard } from '../features/dashboard/AlumniDashboard';
@@ -35,29 +36,24 @@ export const AppRoutes: React.FC = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const location = useLocation();
 
+  const isHomePage = location.pathname === '/' || location.pathname === '/home';
   const isAuthPage = location.pathname === '/login';
 
   return (
     <div className="min-h-screen flex flex-col bg-zinc-50 text-zinc-900">
-      {/* Main Navbar */}
-      {currentUser && <Navbar onToggleSidebar={() => setSidebarOpen(!sidebarOpen)} />}
+      {/* Main Navbar (Shown when logged in and not on Landing HomePage) */}
+      {currentUser && !isHomePage && <Navbar onToggleSidebar={() => setSidebarOpen(!sidebarOpen)} />}
 
       {/* Main Layout Area */}
-      <div className="flex-1 flex max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 gap-6">
-        {currentUser && <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />}
+      <div className={isHomePage ? 'w-full' : 'flex-1 flex max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 gap-6'}>
+        {currentUser && !isHomePage && <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />}
 
         <main className="flex-1 min-w-0">
           <AnimatePresence mode="wait">
             <Routes location={location} key={location.pathname}>
-              {/* Root Navigation Fallback */}
-              <Route 
-                path="/" 
-                element={
-                  currentUser 
-                    ? <Navigate to={`/dashboard/${currentRole}`} replace /> 
-                    : <Navigate to="/login" replace />
-                } 
-              />
+              {/* Public Landing Home Page */}
+              <Route path="/" element={<PageTransition><HomePage /></PageTransition>} />
+              <Route path="/home" element={<PageTransition><HomePage /></PageTransition>} />
 
               {/* Login Page */}
               <Route 
@@ -85,20 +81,13 @@ export const AppRoutes: React.FC = () => {
               <Route path="/profile" element={<ProtectedRoute><PageTransition><ProfilePage /></PageTransition></ProtectedRoute>} />
 
               {/* Fallback */}
-              <Route 
-                path="*" 
-                element={
-                  currentUser 
-                    ? <Navigate to={`/dashboard/${currentRole}`} replace /> 
-                    : <Navigate to="/login" replace />
-                } 
-              />
+              <Route path="*" element={<Navigate to="/" replace />} />
             </Routes>
           </AnimatePresence>
         </main>
       </div>
 
-      <Footer />
+      {!isHomePage && <Footer />}
     </div>
   );
 };
