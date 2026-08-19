@@ -1,6 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
+import * as maplibregl from 'maplibre-gl';
 import { 
   GraduationCap, Users, Briefcase, Calendar, Award, 
   Search, ArrowRight, Sparkles, CheckCircle2, Globe, 
@@ -9,10 +10,68 @@ import {
 import { useAuth } from '../../context/AuthContext';
 import { INITIAL_ALUMNI_PROFILES, INITIAL_JOBS, INITIAL_EVENTS } from '../../mock/seedData';
 
+const MAP_STOPS = [
+  { name: 'Bangladesh', count: 265, lat: 23.8103, lng: 90.4125 },
+  { name: 'USA', count: 420, lat: 37.7749, lng: -122.4194 },
+  { name: 'Canada', count: 180, lat: 43.6532, lng: -79.3832 },
+  { name: 'UK', count: 130, lat: 51.5074, lng: -0.1278 },
+  { name: 'Australia', count: 140, lat: -33.8688, lng: 151.2093 },
+  { name: 'Germany', count: 95, lat: 52.5200, lng: 13.4050 },
+  { name: 'Singapore', count: 110, lat: 1.3521, lng: 103.8198 },
+];
+
 export const HomePage: React.FC = () => {
   const navigate = useNavigate();
   const { currentUser, currentRole } = useAuth();
   const [searchTerm, setSearchTerm] = useState('');
+
+  const homeMapContainerRef = useRef<HTMLDivElement>(null);
+  const homeMapRef = useRef<any>(null);
+
+  // Initialize OpenFreeMap with MapLibre GL
+  useEffect(() => {
+    if (!homeMapContainerRef.current) return;
+    const mapLibreInstance = (window as any).maplibregl || maplibregl;
+    if (!mapLibreInstance || !mapLibreInstance.Map) return;
+
+    const map = new mapLibreInstance.Map({
+      container: homeMapContainerRef.current,
+      style: 'https://tiles.openfreemap.org/styles/bright',
+      center: [20, 20],
+      zoom: 1.8,
+    });
+
+    homeMapRef.current = map;
+    map.addControl(new mapLibreInstance.NavigationControl(), 'top-right');
+
+    MAP_STOPS.forEach(cnt => {
+      const el = document.createElement('div');
+      el.className = 'w-7 h-7 rounded-full bg-[#ff5500] border-2 border-white shadow-md flex items-center justify-center text-white text-[10px] font-extrabold cursor-pointer hover:scale-125 transition-transform';
+      el.innerText = String(cnt.count);
+
+      const popup = new mapLibreInstance.Popup({ offset: 15 }).setHTML(`
+        <div class="p-1 font-sans text-xs">
+          <strong class="text-[#ff5500] text-sm font-bold">${cnt.name}</strong><br/>
+          <span class="text-zinc-800 font-semibold">${cnt.count} Active Alumni</span>
+        </div>
+      `);
+
+      new mapLibreInstance.Marker({ element: el })
+        .setLngLat([cnt.lng, cnt.lat])
+        .setPopup(popup)
+        .addTo(map);
+    });
+
+    return () => {
+      map.remove();
+    };
+  }, []);
+
+  const flyToCountry = (lat: number, lng: number) => {
+    if (homeMapRef.current) {
+      homeMapRef.current.flyTo({ center: [lng, lat], zoom: 4, speed: 1.2 });
+    }
+  };
 
   // Sample data for directory search preview
   const featuredAlumni = INITIAL_ALUMNI_PROFILES.slice(0, 3);
@@ -451,27 +510,36 @@ export const HomePage: React.FC = () => {
           <p className="text-xs text-zinc-600 font-medium">Explore where CSE graduates live and work across the globe.</p>
         </div>
 
-        {/* Global Map Preview Card */}
-        <div className="taste-card p-6 bg-white border border-[#e5e0d5] shadow-lg space-y-4">
-          <div className="h-64 sm:h-80 bg-[#0a0a0a] rounded-2xl flex items-center justify-center relative overflow-hidden text-white">
-            <div className="text-center space-y-2 p-6 z-10">
-              <Globe className="w-12 h-12 text-[#ff5500] mx-auto animate-spin" style={{ animationDuration: '15s' }} />
-              <h3 className="text-xl font-extrabold">OpenFreeMap Spatial Analytics</h3>
-              <p className="text-xs text-zinc-400 max-w-md">Click below to open the interactive spatial vector directory map.</p>
-              <button
-                onClick={() => handleActionClick('/directory')}
-                className="btn-black bg-[#ff5500] hover:bg-orange-600 text-white px-5 py-2.5 text-xs font-bold shadow-md"
-              >
-                Explore Vector Map →
-              </button>
+        {/* Global OpenFreeMap Spatial Map Container */}
+        <div className="taste-card p-4 sm:p-6 bg-white border border-[#e5e0d5] shadow-lg space-y-4">
+          <div className="relative w-full h-80 sm:h-96 rounded-2xl overflow-hidden border border-[#e5e0d5] shadow-inner">
+            <div ref={homeMapContainerRef} className="w-full h-full" />
+            
+            {/* Overlay Map Badge */}
+            <div className="absolute top-4 left-4 bg-white/90 backdrop-blur-md px-3 py-1.5 rounded-xl border border-zinc-200 text-xs font-bold text-zinc-900 shadow-md flex items-center gap-2 pointer-events-none">
+              <Globe className="w-4 h-4 text-[#ff5500] animate-spin" style={{ animationDuration: '20s' }} />
+              <span>Live OpenFreeMap Vector Tile Server</span>
             </div>
           </div>
 
-          <div className="flex flex-wrap items-center justify-center gap-3 text-xs font-bold text-zinc-800 pt-2">
-            {['Bangladesh', 'USA', 'Canada', 'UK', 'Australia', 'Germany', 'Singapore'].map(country => (
-              <span key={country} className="px-3.5 py-1.5 rounded-full bg-[#f8f6f0] border border-[#e5e0d5]">
-                📍 {country}
-              </span>
+          {/* Interactive Country Filter Pills */}
+          <div className="flex flex-wrap items-center justify-center gap-2 text-xs font-bold text-zinc-800 pt-2">
+            {[
+              { name: 'Bangladesh', lat: 23.8103, lng: 90.4125 },
+              { name: 'USA', lat: 37.7749, lng: -122.4194 },
+              { name: 'Canada', lat: 43.6532, lng: -79.3832 },
+              { name: 'UK', lat: 51.5074, lng: -0.1278 },
+              { name: 'Australia', lat: -33.8688, lng: 151.2093 },
+              { name: 'Germany', lat: 52.5200, lng: 13.4050 },
+              { name: 'Singapore', lat: 1.3521, lng: 103.8198 },
+            ].map(country => (
+              <button
+                key={country.name}
+                onClick={() => flyToCountry(country.lat, country.lng)}
+                className="px-3.5 py-1.5 rounded-full bg-[#f8f6f0] border border-[#e5e0d5] hover:bg-[#0a0a0a] hover:text-white transition-all text-xs font-bold flex items-center gap-1 shadow-xs"
+              >
+                📍 {country.name}
+              </button>
             ))}
           </div>
         </div>
