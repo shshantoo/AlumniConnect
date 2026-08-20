@@ -108,11 +108,6 @@ export const ProfilePage: React.FC = () => {
                   <Download className="w-3.5 h-3.5 text-emerald-600" /> {isDownloadingPdf ? 'Generating...' : 'Download PDF'}
                 </button>
 
-                <label className="btn-white px-3 py-2 text-xs font-semibold cursor-pointer inline-flex items-center gap-1 shadow-xs">
-                  <Upload className="w-3.5 h-3.5 text-zinc-600" /> Photo
-                  <input type="file" accept="image/*" onChange={handleDirectPhotoUpload} className="hidden" />
-                </label>
-
                 <button
                   onClick={handleShareProfile}
                   className="btn-white px-3 py-2 text-xs font-semibold flex items-center gap-1 shadow-xs"
