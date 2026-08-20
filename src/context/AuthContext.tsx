@@ -65,52 +65,58 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [currentRole, setCurrentRole] = useState<UserRole>('student');
-  const [currentUser, setCurrentUser] = useState<{ id: string; email: string } | null>({
-    id: 'usr-student-1',
-    email: 'shanto.student@univ.edu'
-  });
-  const [profile, setProfile] = useState<UserProfile | null>(INITIAL_PROFILES['student'] as UserProfile);
-  const [studentProfile, setStudentProfile] = useState<StudentProfile | null>(INITIAL_STUDENT_PROFILE);
-  const [alumniProfiles, setAlumniProfiles] = useState<(AlumniProfile & { name: string; email: string; photo: string })[]>(INITIAL_ALUMNI_PROFILES);
+  const [currentUser, setCurrentUser] = useState<{ id: string; email: string } | null>(null);
+  const [profile, setProfile] = useState<UserProfile | null>(null);
+  const [studentProfile, setStudentProfile] = useState<StudentProfile | null>(null);
+  const [alumniProfiles, setAlumniProfiles] = useState<(AlumniProfile & { name: string; email: string; photo: string })[]>([]);
   
-  const [jobs, setJobs] = useState<JobListing[]>(INITIAL_JOBS);
+  const [jobs, setJobs] = useState<JobListing[]>([]);
   const [internships, setInternships] = useState<JobListing[]>([]);
-  const [applications, setApplications] = useState<ApplicationRecord[]>(INITIAL_APPLICATIONS);
-  const [mentorshipRequests, setMentorshipRequests] = useState<MentorshipRequestRecord[]>(INITIAL_MENTORSHIP_REQUESTS);
-  const [events, setEvents] = useState<EventRecord[]>(INITIAL_EVENTS);
-  const [notifications, setNotifications] = useState<NotificationRecord[]>(INITIAL_NOTIFICATIONS);
-  const [appointments, setAppointments] = useState<AppointmentRecord[]>(INITIAL_APPOINTMENTS);
+  const [applications, setApplications] = useState<ApplicationRecord[]>([]);
+  const [mentorshipRequests, setMentorshipRequests] = useState<MentorshipRequestRecord[]>([]);
+  const [events, setEvents] = useState<EventRecord[]>([]);
+  const [notifications, setNotifications] = useState<NotificationRecord[]>([]);
+  const [appointments, setAppointments] = useState<AppointmentRecord[]>([]);
   
   const [isLoading, setIsLoading] = useState<boolean>(false);
 
-  // Persona Role Switcher
+  // Switch Active User Role
   const switchRole = (role: UserRole) => {
     setCurrentRole(role);
-    const mockProf = INITIAL_PROFILES[role] as UserProfile;
-    setProfile(mockProf);
-    setCurrentUser({
-      id: `usr-${role}-1`,
-      email: mockProf?.email || `${role}@univ.edu`
-    });
+    if (profile) {
+      setProfile(prev => prev ? { ...prev, role } : null);
+    }
   };
 
   // Login by Username or Email
   const loginWithSupabase = async (identifier: string, role: UserRole = 'student'): Promise<boolean> => {
     setIsLoading(true);
     try {
-      setCurrentRole(role);
-      const mockProf = INITIAL_PROFILES[role] as UserProfile;
-      const effectiveEmail = identifier.includes('@') ? identifier : `${identifier}@univ.edu`;
-      const updatedProf = {
-        ...mockProf,
-        email: effectiveEmail,
-        username: identifier.includes('@') ? identifier.split('@')[0] : identifier
+      const cleanEmail = identifier.includes('@') ? identifier.trim() : `${identifier.trim()}@iub.edu.bd`;
+      const cleanUsername = identifier.includes('@') ? identifier.split('@')[0] : identifier.trim();
+      const userId = `usr-${role}-${Date.now()}`;
+
+      const activeProf: UserProfile = {
+        id: `prof-${Date.now()}`,
+        user_id: userId,
+        role: role,
+        full_name: cleanUsername.charAt(0).toUpperCase() + cleanUsername.slice(1),
+        first_name: cleanUsername,
+        last_name: 'User',
+        username: cleanUsername,
+        email: cleanEmail,
+        country: 'Bangladesh',
+        location: 'Dhaka',
+        verification_status: role === 'alumni' ? 'pending' : 'verified',
+        account_status: 'active',
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
       };
-      setProfile(updatedProf);
-      setCurrentUser({
-        id: `usr-${role}-${Date.now()}`,
-        email: effectiveEmail
-      });
+
+      setCurrentRole(role);
+      setProfile(activeProf);
+      setCurrentUser({ id: userId, email: cleanEmail });
+
       setIsLoading(false);
       return true;
     } catch (err) {
