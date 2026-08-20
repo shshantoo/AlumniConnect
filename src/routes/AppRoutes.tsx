@@ -22,6 +22,13 @@ import { EventsPage } from '../features/events/EventsPage';
 import { AppointmentsPage } from '../features/appointments/AppointmentsPage';
 import { ProfilePage } from '../features/profile/ProfilePage';
 
+// New Career Intelligence & Smart Mentorship Imports
+import { CareerAssessment } from '../features/career/pages/CareerAssessment';
+import { CareerAnalysis } from '../features/career/pages/CareerAnalysis';
+import { CareerRoadmap } from '../features/career/pages/CareerRoadmap';
+import { MentorPreferences } from '../features/mentorship/pages/MentorPreferences';
+import { MentorMatches } from '../features/mentorship/pages/MentorMatches';
+
 // Strict Authentication Guard
 const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { currentUser } = useAuth();
@@ -37,7 +44,6 @@ export const AppRoutes: React.FC = () => {
   const location = useLocation();
 
   const isHomePage = location.pathname === '/' || location.pathname === '/home';
-  const isAuthPage = location.pathname === '/login';
 
   return (
     <div className="min-h-screen flex flex-col bg-zinc-50 text-zinc-900">
@@ -72,7 +78,16 @@ export const AppRoutes: React.FC = () => {
               <Route path="/dashboard/faculty" element={<ProtectedRoute><PageTransition><FacultyDashboard /></PageTransition></ProtectedRoute>} />
               <Route path="/dashboard/admin" element={<ProtectedRoute><PageTransition><AdminDashboard /></PageTransition></ProtectedRoute>} />
               
-              {/* Protected Core Modules */}
+              {/* Career Intelligence Engine Routes */}
+              <Route path="/career/assessment" element={<ProtectedRoute><PageTransition><CareerAssessment /></PageTransition></ProtectedRoute>} />
+              <Route path="/career/analysis" element={<ProtectedRoute><PageTransition><CareerAnalysis /></PageTransition></ProtectedRoute>} />
+              <Route path="/career/roadmap" element={<ProtectedRoute><PageTransition><CareerRoadmap /></PageTransition></ProtectedRoute>} />
+
+              {/* Smart Alumni Mentor Matching Routes */}
+              <Route path="/mentorship/preferences" element={<ProtectedRoute><PageTransition><MentorPreferences /></PageTransition></ProtectedRoute>} />
+              <Route path="/mentorship/matches" element={<ProtectedRoute><PageTransition><MentorMatches /></PageTransition></ProtectedRoute>} />
+
+              {/* Core Ecosystem Pages */}
               <Route path="/directory" element={<ProtectedRoute><PageTransition><AlumniDirectoryPage /></PageTransition></ProtectedRoute>} />
               <Route path="/jobs" element={<ProtectedRoute><PageTransition><JobsPage /></PageTransition></ProtectedRoute>} />
               <Route path="/mentorship" element={<ProtectedRoute><PageTransition><MentorshipPage /></PageTransition></ProtectedRoute>} />

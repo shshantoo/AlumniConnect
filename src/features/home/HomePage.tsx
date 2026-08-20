@@ -207,14 +207,14 @@ export const HomePage: React.FC = () => {
             transition={{ duration: 0.6, delay: 0.1 }}
             className="space-y-3 max-w-4xl mx-auto"
           >
-            <h1 className="text-4xl sm:text-6xl font-black text-[#0a0a0a] tracking-tight leading-none uppercase">
-              CONNECT. <span className="text-[#ff5500]">NETWORK.</span> GROW.
+            <h1 className="text-3xl sm:text-5xl font-black text-[#0a0a0a] tracking-tight leading-tight uppercase">
+              Build Your Career Path. <span className="text-[#ff5500]">Find the Right Mentor.</span> Grow with Alumni.
             </h1>
-            <p className="text-base sm:text-xl font-bold text-zinc-700 tracking-wide">
-              Find alumni • Build your career • Get hired
+            <p className="text-xs sm:text-base font-bold text-zinc-700 tracking-wide max-w-2xl mx-auto">
+              Analyze your skills • Identify career gaps • Generate roadmaps • Connect with matching alumni
             </p>
             <p className="text-xs sm:text-sm text-zinc-500 max-w-2xl mx-auto leading-relaxed font-medium pt-2">
-              The official institutional alumni portal linking Computer Science & Engineering students, global tech leaders, corporate recruiters, and departmental faculty.
+              AlumniConnect is an intelligent career development platform that helps university students analyze their skills, identify career gaps, build personalized roadmaps, and connect with alumni mentors who match their professional goals.
             </p>
           </motion.div>
 
@@ -226,17 +226,18 @@ export const HomePage: React.FC = () => {
             className="flex flex-wrap items-center justify-center gap-4 pt-2"
           >
             <button
-              onClick={() => handleActionClick('/directory')}
-              className="btn-black px-6 py-3.5 text-xs sm:text-sm font-extrabold flex items-center gap-2 shadow-lg hover:scale-105 transition-transform"
+              onClick={() => handleActionClick('/career/assessment')}
+              className="px-8 py-3.5 rounded-2xl bg-[#ff5500] hover:bg-[#e04b00] text-white font-black text-xs sm:text-sm shadow-xl shadow-[#ff5500]/25 hover:scale-105 transition-all flex items-center gap-2 cursor-pointer"
             >
-              Explore Alumni Network <ArrowRight className="w-4 h-4 text-[#ff5500]" />
+              <Sparkles className="w-4 h-4" />
+              <span>Start Career Assessment</span>
             </button>
 
             <button
-              onClick={() => handleActionClick('/profile')}
+              onClick={() => handleActionClick('/directory')}
               className="btn-white px-6 py-3.5 text-xs sm:text-sm font-extrabold flex items-center gap-2 shadow-md hover:scale-105 transition-transform"
             >
-              <FileText className="w-4 h-4 text-[#ff5500]" /> Build Your ATS CV
+              <Users className="w-4 h-4 text-[#ff5500]" /> Explore Alumni
             </button>
           </motion.div>
 

@@ -1,234 +1,221 @@
-import React, { useState } from 'react';
+import React from 'react';
+import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { 
-  GraduationCap, Briefcase, Calendar, Award, ArrowUpRight, 
-  CheckCircle2, DollarSign, Send, ArrowRight 
+  getSavedUserGoal, 
+  getSavedUserSkills, 
+  INITIAL_CAREER_PATHS,
+  getSavedRoadmapSteps
+} from '../career/services/careerService';
+import { calculateCareerReadiness } from '../career/utils/calculateReadiness';
+import { MOCK_ALUMNI_MENTORS } from '../mentorship/pages/MentorMatches';
+import { calculateMentorMatch } from '../mentorship/utils/calculateMatch';
+import { getSavedMentorPreferences } from '../mentorship/pages/MentorPreferences';
+import { 
+  Target, Sparkles, Map, GraduationCap, ArrowRight, CheckCircle2, 
+  Briefcase, Award, ChevronRight, Zap, RefreshCw 
 } from 'lucide-react';
-import { Link } from 'react-router-dom';
-import { ProfileCompletionRing } from '../../components/profile/ProfileCompletionRing';
-import { CvBuilderModal } from '../../features/profile/CvBuilderModal';
-
-import { RolePreviewBar } from '../../components/dashboard/RolePreviewBar';
+import { motion } from 'framer-motion';
 
 export const StudentDashboard: React.FC = () => {
-  const { 
-    profile, studentProfile, applications, mentorshipRequests, 
-    events, jobs, alumniProfiles, applyForJob, requestMentorship, updateUserProfile 
-  } = useAuth();
+  const navigate = useNavigate();
+  const { profile } = useAuth();
 
-  const [selectedJob, setSelectedJob] = useState<string | null>(null);
-  const [coverLetter, setCoverLetter] = useState('');
-  const [mentorModal, setMentorModal] = useState<typeof alumniProfiles[0] | null>(null);
-  const [mentorTopic, setMentorTopic] = useState('Career Roadmap & Tech Interview Prep');
-  const [mentorMsg, setMentorMsg] = useState('');
+  const goalId = getSavedUserGoal();
+  const careerPath = INITIAL_CAREER_PATHS.find((cp) => cp.id === goalId) || INITIAL_CAREER_PATHS[0];
+  const userSkills = getSavedUserSkills();
+  const readiness = calculateCareerReadiness(careerPath, userSkills);
 
-  const [isCvBuilderOpen, setIsCvBuilderOpen] = useState(false);
+  // Top Mentor Match
+  const prefs = getSavedMentorPreferences();
+  const userSkillsList = userSkills.map((us) => us.skillName);
+  const matches = MOCK_ALUMNI_MENTORS.map((m) =>
+    calculateMentorMatch(m, careerPath.title, userSkillsList, prefs)
+  ).sort((a, b) => b.matchScore - a.matchScore);
+  const topMatch = matches[0];
 
-  const activeAppsCount = applications.length;
-  const activeMentorships = mentorshipRequests.filter(m => m.status === 'Accepted').length;
-  const registeredEvents = events.filter(e => e.is_registered).length;
-
-  const handleApply = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (selectedJob) {
-      applyForJob(selectedJob, coverLetter);
-      setSelectedJob(null);
-      setCoverLetter('');
-    }
-  };
-
-  const handleSendMentorship = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (mentorModal) {
-      requestMentorship(mentorModal.user_id, mentorModal.name, mentorModal.company, mentorTopic, mentorMsg);
-      setMentorModal(null);
-      setMentorMsg('');
-    }
-  };
+  // Roadmap Progress
+  const roadmapSteps = getSavedRoadmapSteps(goalId);
+  const completedSteps = roadmapSteps.filter((s) => s.status === 'Completed').length;
+  const roadmapProgress = Math.round((completedSteps / roadmapSteps.length) * 100);
 
   return (
-    <div className="space-y-8">
-      <RolePreviewBar />
-      
-      {/* Hero Banner */}
-      <div className="bg-[#f8f6f0] border border-[#e5e0d5] rounded-3xl p-6 sm:p-8 space-y-4 shadow-xs">
-        <div>
-          <span className="taste-pill">
-            <span className="w-2 h-2 rounded-full bg-[#ff5500] animate-pulse" />
-            <span>CSE Student Portal</span>
-            <span className="text-zinc-600 font-normal">v2 active →</span>
-          </span>
-        </div>
+    <div className="space-y-8 max-w-5xl mx-auto pb-12">
+      {/* Welcome & Goal Banner */}
+      <div className="bg-gradient-to-r from-zinc-950 via-zinc-900 to-zinc-950 text-white rounded-3xl p-6 sm:p-8 shadow-xl relative overflow-hidden">
+        <div className="absolute right-0 top-0 w-80 h-80 bg-[#ff5500]/10 rounded-full blur-3xl -mr-16 -mt-16 pointer-events-none" />
 
-        <h1 className="text-4xl sm:text-5xl font-extrabold text-[#0a0a0a] tracking-tight">
-          Welcome back, {profile?.full_name || 'Student'}
-        </h1>
-
-        <p className="font-serif text-2xl sm:text-3xl text-zinc-800 tracking-tight font-normal leading-snug">
-          The Alumni Advisory & Interactive CV Engine for CSE Engineers
-        </p>
-
-        <div className="flex flex-wrap items-center gap-3 pt-2">
-          <button
-            onClick={() => setIsCvBuilderOpen(true)}
-            className="btn-black px-6 py-3.5 text-xs font-bold rounded-2xl flex items-center gap-2 shadow-md"
-          >
-            Launch 18-Section CV Builder <ArrowRight className="w-4 h-4 text-[#ff5500]" />
-          </button>
-          <Link
-            to="/directory"
-            className="btn-white px-6 py-3.5 text-xs font-semibold rounded-2xl flex items-center gap-2 shadow-xs"
-          >
-            Find Alumni Mentor <ArrowUpRight className="w-4 h-4 text-zinc-600" />
-          </Link>
-        </div>
-      </div>
-
-      {/* PROFILE COMPLETION PERCENTAGE RING WIDGET */}
-      <ProfileCompletionRing
-        profile={profile}
-        onOpenCvBuilder={() => setIsCvBuilderOpen(true)}
-      />
-
-      {/* Statistics Grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <div className="taste-card p-5 taste-card-hover">
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-semibold text-zinc-500">Applications</span>
-            <div className="w-9 h-9 rounded-xl bg-[#fce8d5] text-[#0a0a0a] flex items-center justify-center font-bold">
-              <Briefcase className="w-4 h-4 text-[#ff5500]" />
-            </div>
+        <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
+          <div className="space-y-2">
+            <span className="text-xs text-zinc-400 font-bold uppercase tracking-wider">
+              Student Career Dashboard
+            </span>
+            <h1 className="text-3xl font-black">Hello, {profile?.first_name || 'Shanto'} 👋</h1>
+            <p className="text-xs text-zinc-300 max-w-md leading-relaxed">
+              Target Specialization: <strong className="text-white bg-[#ff5500]/20 border border-[#ff5500]/30 px-2 py-0.5 rounded text-xs">{readiness.careerTitle}</strong>
+            </p>
           </div>
-          <p className="text-3xl font-extrabold text-[#0a0a0a] mt-2">{activeAppsCount}</p>
-          <p className="text-[11px] text-emerald-700 font-semibold mt-1 flex items-center gap-1">
-            <CheckCircle2 className="w-3 h-3 text-emerald-600" /> Active job tracker
-          </p>
-        </div>
 
-        <div className="taste-card p-5 taste-card-hover">
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-semibold text-zinc-500">Active Mentors</span>
-            <div className="w-9 h-9 rounded-xl bg-[#fce8d5] text-[#0a0a0a] flex items-center justify-center font-bold">
-              <GraduationCap className="w-4 h-4 text-[#ff5500]" />
-            </div>
-          </div>
-          <p className="text-3xl font-extrabold text-[#0a0a0a] mt-2">{activeMentorships}</p>
-          <p className="text-[11px] text-[#ff5500] font-semibold mt-1">1-on-1 Advisory sessions</p>
-        </div>
-
-        <div className="taste-card p-5 taste-card-hover">
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-semibold text-zinc-500">Event RSVPs</span>
-            <div className="w-9 h-9 rounded-xl bg-[#fce8d5] text-[#0a0a0a] flex items-center justify-center font-bold">
-              <Calendar className="w-4 h-4 text-[#ff5500]" />
-            </div>
-          </div>
-          <p className="text-3xl font-extrabold text-[#0a0a0a] mt-2">{registeredEvents}</p>
-          <p className="text-[11px] text-zinc-500 font-medium mt-1">Upcoming tech reunions</p>
-        </div>
-
-        <div className="taste-card p-5 taste-card-hover">
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-semibold text-zinc-500">Academic Standing</span>
-            <div className="w-9 h-9 rounded-xl bg-[#fce8d5] text-[#0a0a0a] flex items-center justify-center font-bold">
-              <Award className="w-4 h-4 text-[#ff5500]" />
-            </div>
-          </div>
-          <p className="text-3xl font-extrabold text-[#0a0a0a] mt-2">{profile?.cgpa || '3.88'}</p>
-          <p className="text-[11px] text-emerald-700 font-semibold mt-1">Honors Student • CSE</p>
-        </div>
-      </div>
-
-      {/* Featured Jobs & Alumni */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        <div className="lg:col-span-2 space-y-6">
-          <div className="flex items-center justify-between">
-            <h3 className="text-lg font-extrabold text-[#0a0a0a] flex items-center gap-2">
-              <Briefcase className="w-5 h-5 text-[#ff5500]" /> Featured Opportunities
-            </h3>
-            <Link to="/jobs" className="text-xs font-bold text-[#ff5500] hover:underline flex items-center gap-1">
-              View All Opportunities <ArrowUpRight className="w-3.5 h-3.5" />
+          <div className="bg-zinc-900/90 border border-zinc-700/80 p-5 rounded-2xl text-center space-y-2 min-w-[200px]">
+            <span className="text-[10px] text-zinc-400 font-bold uppercase tracking-wider">Career Readiness</span>
+            <div className="text-4xl font-black text-[#ff5500]">{readiness.readinessScore}%</div>
+            <Link
+              to="/career/analysis"
+              className="inline-flex items-center gap-1 text-[11px] text-[#ff5500] font-bold hover:underline"
+            >
+              <span>View Analysis</span>
+              <ChevronRight className="w-3 h-3" />
             </Link>
           </div>
+        </div>
+      </div>
 
-          <div className="space-y-4">
-            {jobs.slice(0, 3).map((job) => (
-              <div key={job.id} className="taste-card p-5 taste-card-hover group">
-                <div className="flex items-start justify-between gap-4">
-                  <div className="flex items-start gap-3.5">
-                    <div className="w-11 h-11 rounded-xl bg-[#0a0a0a] text-white flex items-center justify-center font-bold text-xs">
-                      CSE
-                    </div>
-                    <div>
-                      <h4 className="font-bold text-zinc-950 group-hover:text-[#ff5500] transition text-sm">{job.title}</h4>
-                      <p className="text-xs text-zinc-500 font-medium">{job.company} • {job.location}</p>
-                      <div className="flex flex-wrap items-center gap-2 mt-2">
-                        <span className="px-2.5 py-0.5 rounded-full bg-[#fce8d5] text-zinc-900 border border-[#f8cbb0] text-[10px] font-semibold">
-                          {job.type}
-                        </span>
-                        <span className="text-[11px] text-zinc-600 flex items-center gap-1 font-medium">
-                          <DollarSign className="w-3 h-3 text-emerald-600" /> {job.salary}
-                        </span>
-                      </div>
-                    </div>
-                  </div>
+      {/* Core Intelligence Grid */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        {/* YOUR NEXT STEP CARD */}
+        <div className="bg-white border border-[#e5e0d5] rounded-3xl p-6 shadow-xs space-y-4 relative overflow-hidden">
+          <div className="flex items-center justify-between">
+            <span className="text-[10px] font-black uppercase tracking-wider text-[#ff5500] bg-[#fce8d5] px-2.5 py-0.5 rounded-full flex items-center gap-1">
+              <Zap className="w-3 h-3" />
+              <span>YOUR NEXT STEP</span>
+            </span>
+            <span className="text-xs text-zinc-400 font-medium">Highest Priority</span>
+          </div>
 
-                  <button
-                    onClick={() => setSelectedJob(job.id)}
-                    className="btn-black px-4 py-2 text-xs"
-                  >
-                    Quick Apply
-                  </button>
-                </div>
-              </div>
-            ))}
+          <div className="space-y-2 pt-1">
+            <h3 className="text-xl font-bold text-zinc-900">
+              Master {readiness.nextPrioritySkill || 'React'}
+            </h3>
+            <p className="text-xs text-zinc-600 leading-relaxed">
+              <strong>{readiness.nextPrioritySkill || 'React'}</strong> is currently your highest-weight missing skill gap for {readiness.careerTitle}.
+            </p>
+          </div>
+
+          <div className="pt-2">
+            <button
+              onClick={() => navigate('/career/roadmap')}
+              className="w-full bg-[#0a0a0a] hover:bg-zinc-800 text-white font-bold py-3 px-4 rounded-xl text-xs flex items-center justify-center gap-2 transition-all shadow-sm"
+            >
+              <span>Start Skill Progress</span>
+              <ArrowRight className="w-4 h-4" />
+            </button>
           </div>
         </div>
 
-        <div className="space-y-6">
-          <div className="taste-card p-5 space-y-4">
+        {/* TOP MENTOR MATCH CARD */}
+        {topMatch && (
+          <div className="bg-white border border-[#e5e0d5] rounded-3xl p-6 shadow-xs space-y-4">
             <div className="flex items-center justify-between">
-              <h3 className="font-bold text-[#0a0a0a] text-sm flex items-center gap-2">
-                <GraduationCap className="w-4 h-4 text-[#ff5500]" /> Recommended Alumni
-              </h3>
-              <Link to="/directory" className="text-[11px] text-[#ff5500] hover:underline font-bold">View All</Link>
+              <span className="text-[10px] font-black uppercase tracking-wider text-emerald-700 bg-emerald-100 px-2.5 py-0.5 rounded-full flex items-center gap-1">
+                <GraduationCap className="w-3 h-3 text-emerald-700" />
+                <span>TOP MENTOR MATCH</span>
+              </span>
+              <span className="text-xs font-black text-[#ff5500]">{topMatch.matchScore}% Match</span>
             </div>
 
-            <div className="space-y-3">
-              {alumniProfiles.slice(0, 3).map((alumni) => (
-                <div key={alumni.id} className="flex items-center justify-between p-3 rounded-xl bg-[#f8f6f0] border border-[#e5e0d5]">
-                  <div className="flex items-center gap-3">
-                    <img
-                      src={alumni.photo || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=300&q=80'}
-                      alt={alumni.name}
-                      className="w-9 h-9 rounded-lg object-cover ring-2 ring-[#ff5500]/30"
-                    />
-                    <div>
-                      <p className="font-bold text-zinc-950 text-xs">{alumni.name}</p>
-                      <p className="text-[11px] text-zinc-500">{alumni.position} at <span className="text-[#ff5500] font-semibold">{alumni.company}</span></p>
-                    </div>
-                  </div>
-                  <button
-                    onClick={() => setMentorModal(alumni)}
-                    className="p-2 rounded-lg bg-[#fce8d5] text-zinc-950 hover:bg-[#0a0a0a] hover:text-white transition text-xs font-semibold"
-                  >
-                    <Send className="w-3.5 h-3.5" />
-                  </button>
-                </div>
-              ))}
+            <div className="flex items-center gap-4 pt-1">
+              <img
+                src={topMatch.mentor.photoUrl}
+                alt={topMatch.mentor.alumniName}
+                className="w-14 h-14 rounded-2xl object-cover border-2 border-zinc-100 shadow-xs shrink-0"
+              />
+              <div>
+                <h3 className="text-base font-bold text-zinc-900">{topMatch.mentor.alumniName}</h3>
+                <p className="text-xs text-zinc-600 font-medium">{topMatch.mentor.headline} • {topMatch.mentor.company}</p>
+                <p className="text-[11px] text-emerald-700 font-bold mt-0.5">✓ Same career path • {topMatch.mentor.skills.slice(0, 2).join(', ')}</p>
+              </div>
+            </div>
+
+            <div className="pt-2">
+              <button
+                onClick={() => navigate('/mentorship/matches')}
+                className="w-full bg-[#ff5500] hover:bg-[#e04b00] text-white font-bold py-3 px-4 rounded-xl text-xs flex items-center justify-center gap-2 transition-all shadow-md shadow-[#ff5500]/20"
+              >
+                <span>View Mentor Details & Request</span>
+                <ChevronRight className="w-4 h-4" />
+              </button>
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* ROADMAP PROGRESS CARD */}
+      <div className="bg-white border border-[#e5e0d5] rounded-3xl p-6 shadow-xs space-y-4">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-zinc-100 pb-4">
+          <div>
+            <span className="text-[10px] font-black uppercase tracking-wider text-zinc-500">CAREER ROADMAP</span>
+            <h3 className="text-lg font-bold text-zinc-900">{readiness.careerTitle} Path</h3>
+          </div>
+
+          <div className="flex items-center gap-3">
+            <span className="text-xs font-bold text-zinc-700">{completedSteps} / {roadmapSteps.length} Milestones ({roadmapProgress}%)</span>
+            <Link
+              to="/career/roadmap"
+              className="bg-zinc-100 hover:bg-zinc-200 text-zinc-900 font-bold px-4 py-2 rounded-xl text-xs transition-all"
+            >
+              Continue Roadmap
+            </Link>
+          </div>
+        </div>
+
+        <div className="w-full h-3 bg-zinc-100 rounded-full overflow-hidden">
+          <div
+            className="h-full bg-gradient-to-r from-[#ff5500] to-emerald-500 rounded-full transition-all duration-700"
+            style={{ width: `${roadmapProgress}%` }}
+          />
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-2">
+          {roadmapSteps.slice(0, 3).map((step) => (
+            <div key={step.id} className="p-3 bg-zinc-50 border border-zinc-200/80 rounded-2xl text-xs space-y-1">
+              <div className="flex items-center justify-between">
+                <span className="font-bold text-zinc-900">{step.title}</span>
+                {step.status === 'Completed' ? (
+                  <CheckCircle2 className="w-4 h-4 text-emerald-500" />
+                ) : (
+                  <span className="text-[10px] bg-amber-100 text-amber-800 font-bold px-1.5 py-0.5 rounded">Pending</span>
+                )}
+              </div>
+              <p className="text-[11px] text-zinc-500 line-clamp-1">{step.description}</p>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* RECOMMENDED OPPORTUNITIES */}
+      <div className="bg-white border border-[#e5e0d5] rounded-3xl p-6 shadow-xs space-y-4">
+        <div className="flex items-center justify-between">
+          <h3 className="text-base font-bold text-zinc-900 flex items-center gap-2">
+            <Briefcase className="w-4 h-4 text-[#ff5500]" />
+            <span>Recommended Opportunities for {readiness.careerTitle}</span>
+          </h3>
+          <Link to="/jobs" className="text-xs text-[#ff5500] font-bold hover:underline">
+            View All Jobs
+          </Link>
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div className="p-4 border border-zinc-200 rounded-2xl space-y-2 hover:border-[#ff5500] transition-all">
+            <span className="text-[10px] bg-emerald-100 text-emerald-800 font-bold px-2 py-0.5 rounded">Full-Time</span>
+            <h4 className="text-sm font-bold text-zinc-900">Junior Frontend Developer</h4>
+            <p className="text-xs text-zinc-500">Brain Station 23 • Dhaka / Remote</p>
+            <div className="pt-2 flex justify-between items-center text-xs">
+              <span className="text-zinc-600 font-bold">BDT 45k - 60k/mo</span>
+              <Link to="/jobs" className="text-[#ff5500] font-bold hover:underline">Apply Now →</Link>
+            </div>
+          </div>
+
+          <div className="p-4 border border-zinc-200 rounded-2xl space-y-2 hover:border-[#ff5500] transition-all">
+            <span className="text-[10px] bg-blue-100 text-blue-800 font-bold px-2 py-0.5 rounded">Internship</span>
+            <h4 className="text-sm font-bold text-zinc-900">React Software Engineering Intern</h4>
+            <p className="text-xs text-zinc-500">ShopUp • Dhaka</p>
+            <div className="pt-2 flex justify-between items-center text-xs">
+              <span className="text-zinc-600 font-bold">BDT 20k/mo</span>
+              <Link to="/jobs" className="text-[#ff5500] font-bold hover:underline">Apply Now →</Link>
             </div>
           </div>
         </div>
       </div>
-
-      {/* CV Builder Modal */}
-      <CvBuilderModal
-        isOpen={isCvBuilderOpen}
-        onClose={() => setIsCvBuilderOpen(false)}
-        initialProfile={profile}
-        onSaveProfile={(updated) => updateUserProfile(updated)}
-      />
-
     </div>
   );
 };

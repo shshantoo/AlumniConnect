@@ -249,3 +249,115 @@ FOR SELECT USING (bucket_id = 'profile-pictures');
 
 CREATE POLICY "Authenticated User Storage Insert" ON storage.objects 
 FOR INSERT WITH CHECK (bucket_id = 'profile-pictures');
+
+-- =========================================================
+-- CAREER INTELLIGENCE & SMART MENTOR MATCHING TABLES
+-- =========================================================
+
+-- 14. SKILLS LIBRARY
+CREATE TABLE IF NOT EXISTS public.skills (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    name VARCHAR(100) UNIQUE NOT NULL,
+    category VARCHAR(100) NOT NULL,
+    description TEXT,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+
+-- 15. CAREER PATHS
+CREATE TABLE IF NOT EXISTS public.career_paths (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    title VARCHAR(150) UNIQUE NOT NULL,
+    description TEXT,
+    category VARCHAR(100) DEFAULT 'Engineering',
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+
+-- 16. CAREER SKILL WEIGHTS & REQUIREMENTS
+CREATE TABLE IF NOT EXISTS public.career_skills (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    career_path_id UUID REFERENCES public.career_paths(id) ON DELETE CASCADE,
+    skill_id UUID REFERENCES public.skills(id) ON DELETE CASCADE,
+    importance_weight INTEGER DEFAULT 8 CHECK (importance_weight BETWEEN 1 AND 10),
+    required_level VARCHAR(50) DEFAULT 'Intermediate',
+    UNIQUE(career_path_id, skill_id)
+);
+
+-- 17. USER SKILL PROFICIENCY
+CREATE TABLE IF NOT EXISTS public.user_skills (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    user_id UUID REFERENCES public.users(id) ON DELETE CASCADE,
+    skill_id UUID REFERENCES public.skills(id) ON DELETE CASCADE,
+    proficiency_level VARCHAR(50) NOT NULL CHECK (proficiency_level IN ('Not Learned', 'Beginner', 'Intermediate', 'Advanced', 'Expert')),
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE(user_id, skill_id)
+);
+
+-- 18. CAREER GOALS
+CREATE TABLE IF NOT EXISTS public.career_goals (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    student_id UUID REFERENCES public.users(id) ON DELETE CASCADE,
+    career_path_id UUID REFERENCES public.career_paths(id) ON DELETE CASCADE,
+    target_date DATE,
+    status VARCHAR(50) DEFAULT 'Active',
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+
+-- 19. CAREER ASSESSMENTS & READINESS SCORES
+CREATE TABLE IF NOT EXISTS public.career_assessments (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    student_id UUID REFERENCES public.users(id) ON DELETE CASCADE,
+    career_path_id UUID REFERENCES public.career_paths(id) ON DELETE CASCADE,
+    readiness_score NUMERIC(5,2) NOT NULL,
+    assessment_data JSONB DEFAULT '{}'::jsonb,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+
+-- 20. ROADMAP STEPS & TEMPLATES
+CREATE TABLE IF NOT EXISTS public.roadmap_steps (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    career_path_id UUID REFERENCES public.career_paths(id) ON DELETE CASCADE,
+    title VARCHAR(255) NOT NULL,
+    description TEXT,
+    phase_number INTEGER DEFAULT 1,
+    step_order INTEGER DEFAULT 1,
+    skill_id UUID REFERENCES public.skills(id) ON DELETE SET NULL
+);
+
+-- 21. STUDENT ROADMAP PROGRESS
+CREATE TABLE IF NOT EXISTS public.student_roadmap_progress (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    student_id UUID REFERENCES public.users(id) ON DELETE CASCADE,
+    roadmap_step_id UUID REFERENCES public.roadmap_steps(id) ON DELETE CASCADE,
+    status VARCHAR(50) DEFAULT 'Pending' CHECK (status IN ('Pending', 'In Progress', 'Completed')),
+    completed_at TIMESTAMP WITH TIME ZONE,
+    UNIQUE(student_id, roadmap_step_id)
+);
+
+-- 22. MENTOR PREFERENCES (ALUMNI)
+CREATE TABLE IF NOT EXISTS public.mentor_preferences (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    alumni_id UUID REFERENCES public.users(id) ON DELETE CASCADE,
+    career_path_id UUID REFERENCES public.career_paths(id),
+    industry VARCHAR(100),
+    max_mentees INTEGER DEFAULT 3,
+    availability TEXT[],
+    meeting_type VARCHAR(50) DEFAULT 'Online',
+    active BOOLEAN DEFAULT true,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+
+-- 23. MENTOR MATCHES
+CREATE TABLE IF NOT EXISTS public.mentor_matches (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    student_id UUID REFERENCES public.users(id) ON DELETE CASCADE,
+    alumni_id UUID REFERENCES public.users(id) ON DELETE CASCADE,
+    skill_score NUMERIC(5,2),
+    career_score NUMERIC(5,2),
+    industry_score NUMERIC(5,2),
+    availability_score NUMERIC(5,2),
+    location_score NUMERIC(5,2),
+    final_score NUMERIC(5,2) NOT NULL,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE(student_id, alumni_id)
+);
+
