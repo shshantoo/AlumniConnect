@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { 
   Mail, Phone, GraduationCap, Edit3, MapPin, 
-  Briefcase, Award, Code, BookOpen, HeartHandshake, FileText, Camera, Upload, Download, Printer, X, Share2, Check 
+  Briefcase, Award, Code, BookOpen, HeartHandshake, FileText, Camera, Upload, Download, Printer, X, Share2, Check, Sparkles 
 } from 'lucide-react';
 import { ProfileCompletionRing } from '../../components/profile/ProfileCompletionRing';
 import { CvBuilderModal } from './CvBuilderModal';
@@ -11,6 +12,7 @@ import { generateCvPdf } from '../../utils/generatePdf';
 import { CvTemplateEngine, CvTemplateType } from '../../components/profile/CvTemplateEngine';
 
 export const ProfilePage: React.FC = () => {
+  const navigate = useNavigate();
   const { currentUser, currentRole, profile, updateUserProfile } = useAuth();
   const [isCvBuilderOpen, setIsCvBuilderOpen] = useState(false);
   const [isPdfPreviewOpen, setIsPdfPreviewOpen] = useState(false);
@@ -85,12 +87,21 @@ export const ProfilePage: React.FC = () => {
               {/* ACTION BUTTONS GROUP */}
               <div className="flex flex-wrap items-center gap-2 justify-center sm:justify-start lg:justify-end">
                 {currentRole === 'student' && (
-                  <button
-                    onClick={() => setIsCvBuilderOpen(true)}
-                    className="btn-black px-4 py-2 text-xs font-bold flex items-center gap-1.5 shadow-md"
-                  >
-                    <Edit3 className="w-4 h-4 text-[#ff5500]" /> Launch CV Builder
-                  </button>
+                  <>
+                    <button
+                      onClick={() => navigate('/cv/ai-review')}
+                      className="px-4 py-2 bg-gradient-to-r from-amber-500 to-[#ff5500] hover:opacity-95 text-white text-xs font-black rounded-xl flex items-center gap-1.5 shadow-md transition-all"
+                    >
+                      <Sparkles className="w-4 h-4" /> Improve with AI
+                    </button>
+
+                    <button
+                      onClick={() => setIsCvBuilderOpen(true)}
+                      className="btn-black px-4 py-2 text-xs font-bold flex items-center gap-1.5 shadow-md"
+                    >
+                      <Edit3 className="w-4 h-4 text-[#ff5500]" /> Launch CV Builder
+                    </button>
+                  </>
                 )}
 
                 <button

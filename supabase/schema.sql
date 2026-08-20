@@ -361,3 +361,39 @@ CREATE TABLE IF NOT EXISTS public.mentor_matches (
     UNIQUE(student_id, alumni_id)
 );
 
+-- 24. CVS TABLE
+CREATE TABLE IF NOT EXISTS public.cvs (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    user_id UUID REFERENCES public.users(id) ON DELETE CASCADE,
+    title VARCHAR(255) DEFAULT 'Software Engineer CV',
+    template VARCHAR(100) DEFAULT 'modern',
+    target_career VARCHAR(150) DEFAULT 'Frontend Developer',
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+
+-- 25. CV AI REVIEWS TABLE
+CREATE TABLE IF NOT EXISTS public.cv_ai_reviews (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    cv_id UUID REFERENCES public.cvs(id) ON DELETE CASCADE,
+    user_id UUID REFERENCES public.users(id) ON DELETE CASCADE,
+    overall_score INTEGER NOT NULL,
+    analysis_data JSONB DEFAULT '{}'::jsonb,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+
+-- 26. CV AI SUGGESTIONS TABLE
+CREATE TABLE IF NOT EXISTS public.cv_ai_suggestions (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    review_id UUID REFERENCES public.cv_ai_reviews(id) ON DELETE CASCADE,
+    section VARCHAR(100) NOT NULL,
+    issue TEXT NOT NULL,
+    reason TEXT NOT NULL,
+    original_text TEXT,
+    suggested_text TEXT NOT NULL,
+    priority VARCHAR(20) DEFAULT 'medium' CHECK (priority IN ('high', 'medium', 'low')),
+    status VARCHAR(20) DEFAULT 'pending' CHECK (status IN ('pending', 'applied', 'rejected')),
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+
+

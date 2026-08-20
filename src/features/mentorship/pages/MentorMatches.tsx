@@ -295,15 +295,29 @@ export const MentorMatches: React.FC = () => {
                 </div>
               ) : (
                 <form onSubmit={handleSendRequest} className="space-y-4">
-                  <div className="space-y-1">
-                    <label className="text-xs font-bold text-zinc-700">Mentorship Goal / Note</label>
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between">
+                      <label className="text-xs font-bold text-zinc-700">Mentorship Goal / Note</label>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const note = `Hello ${selectedMentor.alumniName}, I am a CSE student preparing for a ${careerPath.title} role. I am really impressed by your work as a ${selectedMentor.headline} at ${selectedMentor.company}. I am currently working on strengthening my skills in ${selectedMentor.skills.slice(0, 3).join(', ')} and would love your 1-on-1 guidance and feedback.`;
+                          setRequestNote(note);
+                        }}
+                        className="text-[11px] font-extrabold text-[#ff5500] hover:text-[#e04b00] bg-[#fffaf7] border border-[#f8cbb0] px-2.5 py-1 rounded-lg flex items-center gap-1 transition-all shadow-2xs"
+                      >
+                        <Sparkles className="w-3.5 h-3.5 text-[#ff5500]" />
+                        <span>✨ Generate AI Suggested Note</span>
+                      </button>
+                    </div>
+
                     <textarea
-                      rows={4}
+                      rows={5}
                       required
                       value={requestNote}
                       onChange={(e) => setRequestNote(e.target.value)}
-                      placeholder={`Hello ${selectedMentor.alumniName}, I am preparing for a ${careerPath.title} role and would love guidance on frontend development...`}
-                      className="w-full bg-zinc-50 border border-zinc-300 rounded-xl p-3 text-xs text-zinc-900 focus:outline-none focus:border-[#ff5500]"
+                      placeholder={`Hello ${selectedMentor.alumniName}, I am preparing for a ${careerPath.title} role at ${selectedMentor.company} and would love guidance on ${selectedMentor.skills.slice(0, 2).join(' and ')}...`}
+                      className="w-full bg-zinc-50 border border-zinc-300 rounded-xl p-3.5 text-xs text-zinc-900 focus:outline-none focus:border-[#ff5500] leading-relaxed font-medium"
                     />
                   </div>
 
