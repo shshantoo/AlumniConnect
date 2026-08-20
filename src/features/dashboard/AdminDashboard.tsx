@@ -15,6 +15,8 @@ const USER_GROWTH_DATA = [
   { month: 'May', Students: 650, Alumni: 1200, Employers: 45 },
 ];
 
+import { RolePreviewBar } from '../../components/dashboard/RolePreviewBar';
+
 export const AdminDashboard: React.FC = () => {
   const { 
     jobs, events, alumniProfiles, approveAlumni, rejectAlumni, 
@@ -51,6 +53,7 @@ export const AdminDashboard: React.FC = () => {
 
   return (
     <div className="space-y-8">
+      <RolePreviewBar />
       
       {/* Admin Header */}
       <div className="relative rounded-3xl bg-gradient-to-r from-orange-600 via-orange-500 to-amber-600 p-6 sm:p-8 overflow-hidden shadow-md text-white">

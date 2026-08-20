@@ -4,6 +4,8 @@ import {
   Building2, Users, CheckCircle, FileText, Filter 
 } from 'lucide-react';
 
+import { RolePreviewBar } from '../../components/dashboard/RolePreviewBar';
+
 export const EmployerDashboard: React.FC = () => {
   const { profile, jobs, applications, updateApplicationStatus } = useAuth();
   const [filterStatus, setFilterStatus] = useState<string>('All');
@@ -14,6 +16,7 @@ export const EmployerDashboard: React.FC = () => {
 
   return (
     <div className="space-y-8">
+      <RolePreviewBar />
       
       {/* Employer Banner */}
       <div className="relative rounded-3xl bg-gradient-to-r from-orange-600 via-orange-500 to-amber-600 p-6 sm:p-8 overflow-hidden shadow-md text-white">

@@ -13,6 +13,8 @@ const INDUSTRY_DATA = [
   { name: 'Mobile Systems', value: 10, color: '#18181b' },
 ];
 
+import { RolePreviewBar } from '../../components/dashboard/RolePreviewBar';
+
 export const AlumniDashboard: React.FC = () => {
   const { profile, mentorshipRequests, updateMentorshipStatus, postJob, jobs } = useAuth();
   const [showPostModal, setShowPostModal] = useState(false);
@@ -38,6 +40,7 @@ export const AlumniDashboard: React.FC = () => {
 
   return (
     <div className="space-y-8">
+      <RolePreviewBar />
       
       {/* Alumni Welcome Banner */}
       <div className="relative rounded-3xl bg-gradient-to-r from-orange-600 via-orange-500 to-amber-600 p-6 sm:p-8 overflow-hidden shadow-md text-white">

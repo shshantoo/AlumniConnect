@@ -8,6 +8,8 @@ import { Link } from 'react-router-dom';
 import { ProfileCompletionRing } from '../../components/profile/ProfileCompletionRing';
 import { CvBuilderModal } from '../../features/profile/CvBuilderModal';
 
+import { RolePreviewBar } from '../../components/dashboard/RolePreviewBar';
+
 export const StudentDashboard: React.FC = () => {
   const { 
     profile, studentProfile, applications, mentorshipRequests, 
@@ -46,6 +48,7 @@ export const StudentDashboard: React.FC = () => {
 
   return (
     <div className="space-y-8">
+      <RolePreviewBar />
       
       {/* Hero Banner */}
       <div className="bg-[#f8f6f0] border border-[#e5e0d5] rounded-3xl p-6 sm:p-8 space-y-4 shadow-xs">

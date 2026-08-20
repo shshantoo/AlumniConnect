@@ -6,12 +6,15 @@ import {
 } from 'lucide-react';
 import { INITIAL_SYSTEM_REPORTS } from '../../mock/seedData';
 
+import { RolePreviewBar } from '../../components/dashboard/RolePreviewBar';
+
 export const FacultyDashboard: React.FC = () => {
   const { profile, appointments } = useAuth();
   const [reports] = useState(INITIAL_SYSTEM_REPORTS);
 
   return (
     <div className="space-y-8">
+      <RolePreviewBar />
       
       {/* Faculty Header */}
       <div className="relative rounded-3xl bg-gradient-to-r from-orange-600 via-orange-500 to-amber-600 p-6 sm:p-8 overflow-hidden shadow-md text-white">
