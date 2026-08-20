@@ -267,62 +267,64 @@ export const MentorMatches: React.FC = () => {
 
       {/* Request Modal */}
       {selectedMentor && (
-        <div className="fixed inset-0 bg-zinc-950/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-3xl p-6 sm:p-8 max-w-lg w-full space-y-6 shadow-2xl">
-            <div className="flex items-center justify-between border-b border-zinc-100 pb-4">
+        <div className="fixed inset-0 bg-zinc-950/60 backdrop-blur-sm z-50 flex items-center justify-center p-3 sm:p-6 overflow-y-auto">
+          <div className="bg-white rounded-3xl p-5 sm:p-8 max-w-lg w-full my-auto space-y-5 shadow-2xl max-h-[90vh] flex flex-col">
+            <div className="flex items-center justify-between border-b border-zinc-100 pb-3 shrink-0">
               <div>
                 <h3 className="text-lg font-bold text-zinc-900">Request Mentorship</h3>
                 <p className="text-xs text-zinc-500">Send a connection request to {selectedMentor.alumniName}</p>
               </div>
               <button
                 onClick={() => setSelectedMentor(null)}
-                className="text-zinc-400 hover:text-zinc-800 font-bold text-lg"
+                className="text-zinc-400 hover:text-zinc-800 font-bold text-lg p-1"
               >
                 ✕
               </button>
             </div>
 
-            {requestSent ? (
-              <div className="p-8 text-center space-y-3">
-                <div className="w-12 h-12 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center mx-auto">
-                  <Check className="w-6 h-6" />
+            <div className="flex-1 overflow-y-auto pr-1">
+              {requestSent ? (
+                <div className="py-8 text-center space-y-3">
+                  <div className="w-12 h-12 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center mx-auto">
+                    <Check className="w-6 h-6" />
+                  </div>
+                  <h4 className="text-base font-bold text-zinc-900">Request Sent Successfully!</h4>
+                  <p className="text-xs text-zinc-500">
+                    {selectedMentor.alumniName} will be notified and can accept your mentorship request from their dashboard.
+                  </p>
                 </div>
-                <h4 className="text-base font-bold text-zinc-900">Request Sent Successfully!</h4>
-                <p className="text-xs text-zinc-500">
-                  {selectedMentor.alumniName} will be notified and can accept your mentorship request from their dashboard.
-                </p>
-              </div>
-            ) : (
-              <form onSubmit={handleSendRequest} className="space-y-4">
-                <div className="space-y-1">
-                  <label className="text-xs font-bold text-zinc-700">Mentorship Goal / Note</label>
-                  <textarea
-                    rows={4}
-                    required
-                    value={requestNote}
-                    onChange={(e) => setRequestNote(e.target.value)}
-                    placeholder={`Hello ${selectedMentor.alumniName}, I am preparing for a ${careerPath.title} role and would love guidance on frontend development...`}
-                    className="w-full bg-zinc-50 border border-zinc-300 rounded-xl p-3 text-xs text-zinc-900 focus:outline-none focus:border-[#ff5500]"
-                  />
-                </div>
+              ) : (
+                <form onSubmit={handleSendRequest} className="space-y-4">
+                  <div className="space-y-1">
+                    <label className="text-xs font-bold text-zinc-700">Mentorship Goal / Note</label>
+                    <textarea
+                      rows={4}
+                      required
+                      value={requestNote}
+                      onChange={(e) => setRequestNote(e.target.value)}
+                      placeholder={`Hello ${selectedMentor.alumniName}, I am preparing for a ${careerPath.title} role and would love guidance on frontend development...`}
+                      className="w-full bg-zinc-50 border border-zinc-300 rounded-xl p-3 text-xs text-zinc-900 focus:outline-none focus:border-[#ff5500]"
+                    />
+                  </div>
 
-                <div className="flex justify-end gap-3 pt-2">
-                  <button
-                    type="button"
-                    onClick={() => setSelectedMentor(null)}
-                    className="px-4 py-2.5 rounded-xl border border-zinc-200 text-xs font-bold text-zinc-700 hover:bg-zinc-100"
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    type="submit"
-                    className="px-6 py-2.5 rounded-xl bg-[#ff5500] hover:bg-[#e04b00] text-white text-xs font-bold transition-all shadow-md"
-                  >
-                    Submit Request
-                  </button>
-                </div>
-              </form>
-            )}
+                  <div className="flex justify-end gap-3 pt-2">
+                    <button
+                      type="button"
+                      onClick={() => setSelectedMentor(null)}
+                      className="px-4 py-2.5 rounded-xl border border-zinc-200 text-xs font-bold text-zinc-700 hover:bg-zinc-100"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      type="submit"
+                      className="px-6 py-2.5 rounded-xl bg-[#ff5500] hover:bg-[#e04b00] text-white text-xs font-bold transition-all shadow-md"
+                    >
+                      Submit Request
+                    </button>
+                  </div>
+                </form>
+              )}
+            </div>
           </div>
         </div>
       )}
