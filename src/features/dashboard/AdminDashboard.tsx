@@ -2,7 +2,8 @@ import React, { useState } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { 
   ShieldCheck, Users, Briefcase, Calendar, CheckCircle, 
-  BarChart3, Download, AlertCircle, XCircle, GraduationCap, Check
+  BarChart3, Download, AlertCircle, XCircle, GraduationCap, Check,
+  Video, Plus, Trash2, Eye, EyeOff
 } from 'lucide-react';
 import { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip, CartesianGrid } from 'recharts';
 
@@ -15,15 +16,34 @@ const USER_GROWTH_DATA = [
 ];
 
 export const AdminDashboard: React.FC = () => {
-  const { jobs, events, alumniProfiles, approveAlumni, rejectAlumni } = useAuth();
+  const { 
+    jobs, events, alumniProfiles, approveAlumni, rejectAlumni, 
+    homeMedia, addHomeMedia, deleteHomeMedia, togglePublishHomeMedia,
+    createEvent, deleteEvent, togglePublishEvent 
+  } = useAuth();
   
   const [pendingApprovals, setPendingApprovals] = useState([
     { id: 'appr-1', name: 'Quantum Cloud Technologies', type: 'Employer', email: 'hr@quantumcloud.io', date: '2026-08-03' },
     { id: 'appr-2', name: 'Dr. Robert Miller', type: 'Alumni (2016)', email: 'robert@apple.com', date: '2026-08-04' },
   ]);
 
+  const [isAddMediaOpen, setIsAddMediaOpen] = useState(false);
+  const [mediaForm, setMediaForm] = useState({
+    title: '',
+    type: 'video' as 'image' | 'video',
+    url: '',
+    description: ''
+  });
+
   const handleApproveEmployer = (id: string) => {
     setPendingApprovals(prev => prev.filter(item => item.id !== id));
+  };
+
+  const handleAddMediaSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    addHomeMedia(mediaForm);
+    setIsAddMediaOpen(false);
+    setMediaForm({ title: '', type: 'video', url: '', description: '' });
   };
 
   // Pending Alumni registrations needing verification
@@ -43,15 +63,15 @@ export const AdminDashboard: React.FC = () => {
               AlumniConnect Administration Portal
             </h1>
             <p className="text-orange-100 text-xs sm:text-sm font-medium">
-              IUB Verification Queue • Convocation Review • Account Access Control
+              Event Publishing • Home Media & Video Manager • IUB Verification Queue
             </p>
           </div>
 
           <button
-            onClick={() => alert('Exporting system analytics report (PDF)...')}
+            onClick={() => setIsAddMediaOpen(true)}
             className="px-4 py-2.5 rounded-xl bg-zinc-900 hover:bg-zinc-800 text-white font-bold text-xs shadow-md flex items-center gap-2 transition"
           >
-            <Download className="w-4 h-4 text-orange-400" /> Export Analytics Report
+            <Plus className="w-4 h-4 text-[#ff5500]" /> Add Home Media / Video
           </button>
         </div>
       </div>
@@ -78,11 +98,11 @@ export const AdminDashboard: React.FC = () => {
 
         <div className="bg-white border border-zinc-200 rounded-2xl p-5 shadow-xs">
           <div className="flex items-center justify-between">
-            <span className="text-xs font-semibold text-zinc-500">Active Jobs & Internships</span>
-            <Briefcase className="w-5 h-5 text-emerald-600" />
+            <span className="text-xs font-semibold text-zinc-500">Published Home Media</span>
+            <Video className="w-5 h-5 text-blue-600" />
           </div>
-          <p className="text-2xl font-extrabold text-zinc-900 mt-2">{jobs.length}</p>
-          <span className="text-[10px] text-emerald-600 font-semibold">Verified Companies</span>
+          <p className="text-2xl font-extrabold text-zinc-900 mt-2">{homeMedia.length}</p>
+          <span className="text-[10px] text-blue-600 font-semibold">Images & Video Links</span>
         </div>
 
         <div className="bg-white border border-zinc-200 rounded-2xl p-5 shadow-xs">
@@ -92,6 +112,60 @@ export const AdminDashboard: React.FC = () => {
           </div>
           <p className="text-2xl font-extrabold text-zinc-900 mt-2">{events.length}</p>
           <span className="text-[10px] text-zinc-500 font-semibold">Global Summits & Workshops</span>
+        </div>
+      </div>
+
+      {/* ADMIN HOME MEDIA & VIDEO MANAGER */}
+      <div className="taste-card p-6 bg-white border border-[#e5e0d5] space-y-4 shadow-xs">
+        <div className="flex items-center justify-between border-b border-zinc-200 pb-3">
+          <h3 className="text-base font-bold text-zinc-900 flex items-center gap-2">
+            <Video className="w-5 h-5 text-[#ff5500]" /> Home Page Media & Video Control Panel (Admin Only)
+          </h3>
+          <button
+            onClick={() => setIsAddMediaOpen(true)}
+            className="btn-black px-4 py-2 text-xs font-bold flex items-center gap-1.5"
+          >
+            <Plus className="w-3.5 h-3.5 text-[#ff5500]" /> Add New Image/Video Link
+          </button>
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          {homeMedia.map((m) => (
+            <div key={m.id} className="p-3.5 rounded-xl bg-zinc-50 border border-zinc-200 space-y-2 text-xs">
+              <div className="flex items-center justify-between">
+                <span className="font-bold text-zinc-900 truncate max-w-[180px]">{m.title}</span>
+                <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-orange-100 text-orange-800 uppercase">
+                  {m.type}
+                </span>
+              </div>
+
+              <p className="text-[11px] text-zinc-500 truncate">{m.url}</p>
+
+              <div className="flex items-center justify-between pt-2 border-t border-zinc-200">
+                <span className={`text-[10px] font-bold px-2 py-0.5 rounded ${m.is_published ? 'bg-emerald-100 text-emerald-800' : 'bg-rose-100 text-rose-800'}`}>
+                  {m.is_published ? 'Published' : 'Unpublished'}
+                </span>
+
+                <div className="flex items-center gap-1.5">
+                  <button
+                    onClick={() => togglePublishHomeMedia(m.id)}
+                    className="p-1 rounded bg-white border border-zinc-300 text-zinc-700"
+                    title={m.is_published ? 'Unpublish' : 'Publish'}
+                  >
+                    {m.is_published ? <EyeOff className="w-3.5 h-3.5 text-amber-600" /> : <Eye className="w-3.5 h-3.5 text-emerald-600" />}
+                  </button>
+
+                  <button
+                    onClick={() => deleteHomeMedia(m.id)}
+                    className="p-1 rounded bg-white border border-zinc-300 text-rose-600"
+                    title="Delete Media"
+                  >
+                    <Trash2 className="w-3.5 h-3.5" />
+                  </button>
+                </div>
+              </div>
+            </div>
+          ))}
         </div>
       </div>
 
@@ -200,6 +274,78 @@ export const AdminDashboard: React.FC = () => {
         </div>
 
       </div>
+
+      {/* ADMIN ADD MEDIA MODAL */}
+      {isAddMediaOpen && (
+        <div className="fixed inset-0 bg-zinc-950/60 backdrop-blur-md z-50 flex items-center justify-center p-4">
+          <div className="bg-white border border-[#e5e0d5] rounded-3xl w-full max-w-md p-6 space-y-4 shadow-2xl animate-scaleUp text-xs text-zinc-900">
+            <div className="flex items-center justify-between border-b border-zinc-200 pb-3">
+              <h3 className="font-extrabold text-sm flex items-center gap-2 text-[#ff5500]">
+                <Video className="w-4 h-4" /> Admin Home Media & Video Upload
+              </h3>
+              <button onClick={() => setIsAddMediaOpen(false)} className="text-zinc-500 hover:text-zinc-800">✕</button>
+            </div>
+
+            <form onSubmit={handleAddMediaSubmit} className="space-y-3">
+              <div>
+                <label className="block font-bold mb-1">Media Title *</label>
+                <input
+                  type="text"
+                  required
+                  placeholder="e.g. AI Cloud Systems Keynote 2026"
+                  value={mediaForm.title}
+                  onChange={(e) => setMediaForm({ ...mediaForm, title: e.target.value })}
+                  className="w-full bg-[#f8f6f0] border border-[#e5e0d5] rounded-xl p-2.5 text-xs text-zinc-900"
+                />
+              </div>
+
+              <div>
+                <label className="block font-bold mb-1">Media Type *</label>
+                <select
+                  value={mediaForm.type}
+                  onChange={(e) => setMediaForm({ ...mediaForm, type: e.target.value as any })}
+                  className="w-full bg-[#f8f6f0] border border-[#e5e0d5] rounded-xl p-2.5 text-xs text-zinc-900"
+                >
+                  <option value="video">Video (YouTube / Vimeo / MP4 Link)</option>
+                  <option value="image">Image (High-Res Photo URL)</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="block font-bold mb-1">
+                  {mediaForm.type === 'video' ? 'Video Link (YouTube, Vimeo, MP4) *' : 'Image URL *'}
+                </label>
+                <input
+                  type="url"
+                  required
+                  placeholder={mediaForm.type === 'video' ? 'https://www.youtube.com/watch?v=...' : 'https://images.unsplash.com/...'}
+                  value={mediaForm.url}
+                  onChange={(e) => setMediaForm({ ...mediaForm, url: e.target.value })}
+                  className="w-full bg-[#f8f6f0] border border-[#e5e0d5] rounded-xl p-2.5 text-xs text-zinc-900"
+                />
+              </div>
+
+              <div>
+                <label className="block font-bold mb-1">Description</label>
+                <textarea
+                  rows={2}
+                  placeholder="Brief description of this media item..."
+                  value={mediaForm.description}
+                  onChange={(e) => setMediaForm({ ...mediaForm, description: e.target.value })}
+                  className="w-full bg-[#f8f6f0] border border-[#e5e0d5] rounded-xl p-2.5 text-xs text-zinc-900"
+                />
+              </div>
+
+              <button
+                type="submit"
+                className="btn-black w-full py-3 text-xs font-extrabold flex items-center justify-center gap-2 shadow-md"
+              >
+                Publish Media to Home Page
+              </button>
+            </form>
+          </div>
+        </div>
+      )}
 
     </div>
   );

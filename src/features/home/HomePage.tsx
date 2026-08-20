@@ -5,7 +5,8 @@ import * as maplibregl from 'maplibre-gl';
 import { 
   GraduationCap, Users, Briefcase, Calendar, Award, 
   Search, ArrowRight, Sparkles, CheckCircle2, Globe, 
-  FileText, HeartHandshake, MapPin, Building2, UserCheck, ShieldCheck, ChevronRight
+  FileText, HeartHandshake, MapPin, Building2, UserCheck, ShieldCheck, ChevronRight,
+  Video, Plus, Trash2, Eye, EyeOff, Play
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { INITIAL_ALUMNI_PROFILES, INITIAL_JOBS, INITIAL_EVENTS } from '../../mock/seedData';
@@ -22,8 +23,27 @@ const MAP_STOPS = [
 
 export const HomePage: React.FC = () => {
   const navigate = useNavigate();
-  const { currentUser, currentRole, profile } = useAuth();
+  const { 
+    currentUser, currentRole, profile, 
+    homeMedia, addHomeMedia, deleteHomeMedia, togglePublishHomeMedia 
+  } = useAuth();
   const [searchTerm, setSearchTerm] = useState('');
+
+  // Admin Add Home Media Modal State
+  const [isAddMediaOpen, setIsAddMediaOpen] = useState(false);
+  const [mediaForm, setMediaForm] = useState({
+    title: '',
+    type: 'video' as 'image' | 'video',
+    url: '',
+    description: ''
+  });
+
+  const handleAddMediaSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    addHomeMedia(mediaForm);
+    setIsAddMediaOpen(false);
+    setMediaForm({ title: '', type: 'video', url: '', description: '' });
+  };
 
   const homeMapContainerRef = useRef<HTMLDivElement>(null);
   const homeMapRef = useRef<any>(null);
@@ -515,6 +535,176 @@ export const HomePage: React.FC = () => {
           </div>
         </div>
       </section>
+
+      {/* ========================================================================= */}
+      {/* 9.5 FEATURED MEDIA & VIDEO SHOWCASE (ADMIN MANAGED)                     */}
+      {/* ========================================================================= */}
+      <section className="py-16 bg-[#0a0a0a] text-white">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-8">
+          
+          <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 border-b border-zinc-800 pb-4">
+            <div className="space-y-1">
+              <span className="px-3 py-1 rounded-full bg-[#ff5500]/20 border border-[#ff5500]/40 text-[#ff5500] text-xs font-bold inline-flex items-center gap-1.5">
+                <Video className="w-3.5 h-3.5" /> Department Video & Media Gallery
+              </span>
+              <h2 className="text-2xl sm:text-3xl font-extrabold text-white tracking-tight">FEATURED MEDIA & VIDEO SHOWCASE</h2>
+              <p className="text-xs text-zinc-400 font-medium">Explore keynote recordings, technical summits, and media galleries managed by Department Admins.</p>
+            </div>
+
+            {/* Admin Add Media Action Button (Admin Only) */}
+            {currentRole === 'admin' && (
+              <button
+                onClick={() => setIsAddMediaOpen(true)}
+                className="btn-black bg-[#ff5500] hover:bg-orange-600 text-white px-5 py-2.5 text-xs font-bold flex items-center gap-2 shadow-lg whitespace-nowrap"
+              >
+                <Plus className="w-4 h-4" /> Add Image / Video Link
+              </button>
+            )}
+          </div>
+
+          {/* Media Items Grid */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {homeMedia
+              .filter(m => currentRole === 'admin' || m.is_published !== false)
+              .map((media) => (
+                <div key={media.id} className="taste-card p-4 bg-zinc-900 border border-zinc-800 space-y-3 relative overflow-hidden group">
+                  
+                  {/* Media Content Display */}
+                  {media.type === 'video' ? (
+                    <div className="relative w-full aspect-video rounded-xl overflow-hidden bg-black border border-zinc-800">
+                      {media.video_embed_url ? (
+                        <iframe
+                          src={media.video_embed_url}
+                          title={media.title}
+                          className="w-full h-full border-0"
+                          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                          allowFullScreen
+                        />
+                      ) : (
+                        <video src={media.url} controls className="w-full h-full object-cover" />
+                      )}
+                    </div>
+                  ) : (
+                    <div className="relative w-full h-64 rounded-xl overflow-hidden bg-zinc-950 border border-zinc-800">
+                      <img src={media.url} alt={media.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
+                    </div>
+                  )}
+
+                  <div className="space-y-1">
+                    <div className="flex items-center justify-between">
+                      <h4 className="font-extrabold text-sm text-white">{media.title}</h4>
+                      <span className="text-[10px] uppercase font-bold px-2 py-0.5 rounded bg-zinc-800 text-orange-400 border border-zinc-700">
+                        {media.type}
+                      </span>
+                    </div>
+                    {media.description && (
+                      <p className="text-xs text-zinc-400 leading-relaxed font-medium">{media.description}</p>
+                    )}
+                  </div>
+
+                  {/* Admin Specific Media Controls */}
+                  {currentRole === 'admin' && (
+                    <div className="pt-2 border-t border-zinc-800 flex items-center justify-between text-xs">
+                      <span className={`text-[10px] font-bold px-2 py-0.5 rounded ${media.is_published ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/40' : 'bg-rose-500/20 text-rose-400 border border-rose-500/40'}`}>
+                        {media.is_published ? 'Published on Home' : 'Unpublished (Admin Only)'}
+                      </span>
+                      <div className="flex items-center gap-2">
+                        <button
+                          onClick={() => togglePublishHomeMedia(media.id)}
+                          className="p-1.5 rounded-lg bg-zinc-800 hover:bg-zinc-700 text-zinc-300 transition"
+                          title={media.is_published ? 'Unpublish from Home' : 'Publish to Home'}
+                        >
+                          {media.is_published ? <EyeOff className="w-4 h-4 text-amber-400" /> : <Eye className="w-4 h-4 text-emerald-400" />}
+                        </button>
+                        <button
+                          onClick={() => deleteHomeMedia(media.id)}
+                          className="p-1.5 rounded-lg bg-zinc-800 hover:bg-rose-900/50 text-rose-400 transition"
+                          title="Delete Media"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      </div>
+                    </div>
+                  )}
+
+                </div>
+              ))}
+          </div>
+
+        </div>
+      </section>
+
+      {/* ADMIN ADD MEDIA MODAL */}
+      {isAddMediaOpen && (
+        <div className="fixed inset-0 bg-zinc-950/80 backdrop-blur-md z-50 flex items-center justify-center p-4">
+          <div className="bg-zinc-900 border border-zinc-800 text-white rounded-3xl w-full max-w-md p-6 space-y-4 shadow-2xl animate-scaleUp text-xs">
+            <div className="flex items-center justify-between border-b border-zinc-800 pb-3">
+              <h3 className="font-extrabold text-sm flex items-center gap-2 text-[#ff5500]">
+                <Video className="w-4 h-4" /> Admin Home Media & Video Upload
+              </h3>
+              <button onClick={() => setIsAddMediaOpen(false)} className="text-zinc-400 hover:text-white">✕</button>
+            </div>
+
+            <form onSubmit={handleAddMediaSubmit} className="space-y-3">
+              <div>
+                <label className="block font-bold mb-1 text-zinc-300">Media Title *</label>
+                <input
+                  type="text"
+                  required
+                  placeholder="e.g. AI Cloud Systems Keynote 2026"
+                  value={mediaForm.title}
+                  onChange={(e) => setMediaForm({ ...mediaForm, title: e.target.value })}
+                  className="w-full bg-zinc-950 border border-zinc-800 rounded-xl p-2.5 text-xs text-white"
+                />
+              </div>
+
+              <div>
+                <label className="block font-bold mb-1 text-zinc-300">Media Type *</label>
+                <select
+                  value={mediaForm.type}
+                  onChange={(e) => setMediaForm({ ...mediaForm, type: e.target.value as any })}
+                  className="w-full bg-zinc-950 border border-zinc-800 rounded-xl p-2.5 text-xs text-white"
+                >
+                  <option value="video">Video (YouTube / Vimeo / MP4 Link)</option>
+                  <option value="image">Image (High-Res Photo URL)</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="block font-bold mb-1 text-zinc-300">
+                  {mediaForm.type === 'video' ? 'Video Link (YouTube, Vimeo, MP4) *' : 'Image URL *'}
+                </label>
+                <input
+                  type="url"
+                  required
+                  placeholder={mediaForm.type === 'video' ? 'https://www.youtube.com/watch?v=...' : 'https://images.unsplash.com/...'}
+                  value={mediaForm.url}
+                  onChange={(e) => setMediaForm({ ...mediaForm, url: e.target.value })}
+                  className="w-full bg-zinc-950 border border-zinc-800 rounded-xl p-2.5 text-xs text-white"
+                />
+              </div>
+
+              <div>
+                <label className="block font-bold mb-1 text-zinc-300">Description</label>
+                <textarea
+                  rows={2}
+                  placeholder="Brief description of this media item..."
+                  value={mediaForm.description}
+                  onChange={(e) => setMediaForm({ ...mediaForm, description: e.target.value })}
+                  className="w-full bg-zinc-950 border border-zinc-800 rounded-xl p-2.5 text-xs text-white"
+                />
+              </div>
+
+              <button
+                type="submit"
+                className="btn-black bg-[#ff5500] hover:bg-orange-600 text-white w-full py-3 text-xs font-extrabold flex items-center justify-center gap-2 shadow-md"
+              >
+                Publish Media to Home Page
+              </button>
+            </form>
+          </div>
+        </div>
+      )}
 
       {/* ========================================================================= */}
       {/* 10. ALUMNI AROUND THE WORLD SPATIAL MAP                                  */}

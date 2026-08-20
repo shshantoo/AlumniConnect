@@ -287,6 +287,18 @@ export interface EventRecord {
   image?: string;
   is_registered?: boolean;
   registered_count?: number;
+  is_published?: boolean;
+}
+
+export interface HomeMediaItem {
+  id: string;
+  title: string;
+  type: 'image' | 'video';
+  url: string; // Image URL or Video URL (e.g. YouTube, Vimeo, mp4)
+  video_embed_url?: string;
+  description?: string;
+  is_published?: boolean;
+  created_at: string;
 }
 
 export interface AppointmentRecord {

@@ -3,7 +3,7 @@ import { supabase } from '../utils/supabase';
 import { 
   UserRole, UserProfile, StudentProfile, AlumniProfile,
   JobListing, ApplicationRecord, MentorshipRequestRecord, 
-  EventRecord, NotificationRecord, AppointmentRecord 
+  EventRecord, HomeMediaItem, NotificationRecord, AppointmentRecord 
 } from '../types/database.types';
 import { 
   INITIAL_PROFILES, INITIAL_STUDENT_PROFILE, INITIAL_ALUMNI_PROFILES, 
@@ -22,6 +22,7 @@ interface AuthContextType {
   applications: ApplicationRecord[];
   mentorshipRequests: MentorshipRequestRecord[];
   events: EventRecord[];
+  homeMedia: HomeMediaItem[];
   notifications: NotificationRecord[];
   appointments: AppointmentRecord[];
   isLoading: boolean;
@@ -56,6 +57,13 @@ interface AuthContextType {
   requestMentorship: (mentorId: string, mentorName: string, mentorCompany: string, topic: string, message: string) => void;
   updateMentorshipStatus: (requestId: string, status: 'Accepted' | 'Rejected') => void;
   registerForEvent: (eventId: string) => void;
+  createEvent: (data: Partial<EventRecord>) => void;
+  editEvent: (id: string, data: Partial<EventRecord>) => void;
+  deleteEvent: (id: string) => void;
+  togglePublishEvent: (id: string) => void;
+  addHomeMedia: (data: Partial<HomeMediaItem>) => void;
+  deleteHomeMedia: (id: string) => void;
+  togglePublishHomeMedia: (id: string) => void;
   bookAppointment: (facultyId: string, facultyName: string, date: string, topic: string) => void;
   markNotificationRead: (id: string) => void;
   updateApplicationStatus: (appId: string, newStatus: 'Pending' | 'Reviewing' | 'Shortlisted' | 'Accepted' | 'Rejected') => void;
@@ -342,6 +350,82 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }));
   };
 
+  const [homeMedia, setHomeMedia] = useState<HomeMediaItem[]>([
+    {
+      id: 'med-1',
+      title: 'Global CSE Alumni Keynote & Tech Summit 2026',
+      type: 'video',
+      url: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
+      video_embed_url: 'https://www.youtube.com/embed/dQw4w9WgXcQ',
+      description: 'Annual keynote featuring alumni leaders from Google, Amazon, and Stripe on AI Cloud Systems.',
+      is_published: true,
+      created_at: new Date().toISOString()
+    }
+  ]);
+
+  // Admin Event Management
+  const createEvent = (data: Partial<EventRecord>) => {
+    const newEvt: EventRecord = {
+      id: `evt-${Date.now()}`,
+      title: data.title || 'Untitled CSE Event',
+      description: data.description || 'Departmental workshop and networking summit.',
+      event_date: data.event_date || new Date().toISOString(),
+      location: data.location || 'IUB Campus & Zoom Webcast',
+      category: data.category || 'Workshop',
+      image: data.image || 'https://images.unsplash.com/photo-1540575467063-178a50c2df87?auto=format&fit=crop&w=800&q=80',
+      is_registered: false,
+      registered_count: 0,
+      is_published: true
+    };
+    setEvents(prev => [newEvt, ...prev]);
+  };
+
+  const editEvent = (id: string, data: Partial<EventRecord>) => {
+    setEvents(prev => prev.map(e => e.id === id ? { ...e, ...data } : e));
+  };
+
+  const deleteEvent = (id: string) => {
+    setEvents(prev => prev.filter(e => e.id !== id));
+  };
+
+  const togglePublishEvent = (id: string) => {
+    setEvents(prev => prev.map(e => e.id === id ? { ...e, is_published: !e.is_published } : e));
+  };
+
+  // Admin Home Page Media Management
+  const addHomeMedia = (data: Partial<HomeMediaItem>) => {
+    let videoEmbed = data.video_embed_url;
+    if (data.type === 'video' && data.url) {
+      if (data.url.includes('youtube.com/watch?v=')) {
+        videoEmbed = data.url.replace('watch?v=', 'embed/');
+      } else if (data.url.includes('youtu.be/')) {
+        videoEmbed = data.url.replace('youtu.be/', 'youtube.com/embed/');
+      } else {
+        videoEmbed = data.url;
+      }
+    }
+
+    const newMedia: HomeMediaItem = {
+      id: `med-${Date.now()}`,
+      title: data.title || 'Featured Department Media',
+      type: data.type || 'image',
+      url: data.url || 'https://images.unsplash.com/photo-1522071820081-009f0129c71c?auto=format&fit=crop&w=800&q=80',
+      video_embed_url: videoEmbed,
+      description: data.description || 'Admin featured media item.',
+      is_published: true,
+      created_at: new Date().toISOString()
+    };
+    setHomeMedia(prev => [newMedia, ...prev]);
+  };
+
+  const deleteHomeMedia = (id: string) => {
+    setHomeMedia(prev => prev.filter(m => m.id !== id));
+  };
+
+  const togglePublishHomeMedia = (id: string) => {
+    setHomeMedia(prev => prev.map(m => m.id === id ? { ...m, is_published: !m.is_published } : m));
+  };
+
   const bookAppointment = (facultyId: string, facultyName: string, date: string, topic: string) => {
     if (!profile) return;
     const apt: AppointmentRecord = {
@@ -378,6 +462,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       applications,
       mentorshipRequests,
       events,
+      homeMedia,
       notifications,
       appointments,
       isLoading,
@@ -393,6 +478,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       requestMentorship,
       updateMentorshipStatus,
       registerForEvent,
+      createEvent,
+      editEvent,
+      deleteEvent,
+      togglePublishEvent,
+      addHomeMedia,
+      deleteHomeMedia,
+      togglePublishHomeMedia,
       bookAppointment,
       markNotificationRead,
       updateApplicationStatus
