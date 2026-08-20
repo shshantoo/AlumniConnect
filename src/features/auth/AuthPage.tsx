@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { useLocation } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { UserRole } from '../../types/database.types';
 import { 
@@ -9,8 +10,22 @@ import {
 
 export const AuthPage: React.FC = () => {
   const { loginWithSupabase, signUpWithSupabase, switchRole } = useAuth();
-  const [isSignIn, setIsSignIn] = useState(true);
+  const location = useLocation();
+
+  const searchParams = new URLSearchParams(location.search);
+  const initialMode = searchParams.get('mode');
+
+  const [isSignIn, setIsSignIn] = useState(initialMode !== 'register');
   const [selectedRole, setSelectedRole] = useState<UserRole>('student');
+
+  useEffect(() => {
+    if (initialMode === 'register') {
+      setIsSignIn(false);
+    } else if (initialMode === 'login') {
+      setIsSignIn(true);
+    }
+  }, [initialMode]);
+
   const [showPassword, setShowPassword] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
   const [successMsg, setSuccessMsg] = useState('');
@@ -71,12 +86,6 @@ export const AuthPage: React.FC = () => {
   };
 
   const strengthMeta = getStrengthLabel(passwordStrength);
-
-  // Handle Quick Demo Login
-  const handleQuickDemoLogin = async (role: UserRole) => {
-    switchRole(role);
-    await loginWithSupabase(`demo.${role}@iub.edu.bd`, role);
-  };
 
   // Handle Sign In Submit
   const handleSignInSubmit = async (e: React.FormEvent) => {
@@ -558,28 +567,6 @@ export const AuthPage: React.FC = () => {
             </button>
           </form>
         )}
-
-        {/* Quick Demo Role Switcher Shortcuts */}
-        <div className="pt-4 border-t border-zinc-100 space-y-2 text-center">
-          <p className="text-[11px] font-bold text-zinc-600 uppercase tracking-wider">Quick Demo Sign In Shortcuts</p>
-          <div className="flex flex-wrap items-center justify-center gap-2">
-            {[
-              { id: 'student', label: 'Student Persona' },
-              { id: 'alumni', label: 'Alumni Persona' },
-              { id: 'employer', label: 'Employer Persona' },
-              { id: 'faculty', label: 'Faculty Persona' },
-              { id: 'admin', label: 'Admin Portal' },
-            ].map(d => (
-              <button
-                key={d.id}
-                onClick={() => handleQuickDemoLogin(d.id as UserRole)}
-                className="px-3 py-1.5 rounded-lg bg-[#f8f6f0] border border-[#e5e0d5] text-zinc-800 font-semibold text-[11px] hover:bg-[#f0ede6] transition"
-              >
-                ⚡ {d.label}
-              </button>
-            ))}
-          </div>
-        </div>
 
       </div>
 

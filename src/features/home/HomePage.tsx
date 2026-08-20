@@ -22,7 +22,7 @@ const MAP_STOPS = [
 
 export const HomePage: React.FC = () => {
   const navigate = useNavigate();
-  const { currentUser, currentRole } = useAuth();
+  const { currentUser, currentRole, profile } = useAuth();
   const [searchTerm, setSearchTerm] = useState('');
 
   const homeMapContainerRef = useRef<HTMLDivElement>(null);
@@ -117,30 +117,46 @@ export const HomePage: React.FC = () => {
             <a href="#events" className="hover:text-[#ff5500] transition">Events</a>
           </nav>
 
-          {/* Auth Actions */}
+          {/* Auth Actions Matching Attachment */}
           <div className="flex items-center gap-3">
             {currentUser ? (
-              <button
-                onClick={() => navigate(`/dashboard/${currentRole}`)}
-                className="btn-black px-4 py-2 text-xs font-extrabold flex items-center gap-1.5 shadow-md"
-              >
-                Go to Dashboard <ArrowRight className="w-3.5 h-3.5 text-[#ff5500]" />
-              </button>
+              <div className="flex items-center gap-3">
+                <div className="flex items-center gap-2.5 bg-[#f8f6f0] border border-[#e5e0d5] px-3 py-1.5 rounded-xl">
+                  <img
+                    src={profile?.photo || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=300&q=80'}
+                    alt="User Avatar"
+                    className="w-7 h-7 rounded-lg object-cover ring-2 ring-[#ff5500]/30"
+                  />
+                  <div className="hidden sm:block text-left text-xs">
+                    <p className="font-bold text-[#0a0a0a] leading-tight truncate max-w-[120px]">
+                      {profile?.full_name || 'User Account'}
+                    </p>
+                    <span className="text-[10px] text-[#ff5500] capitalize font-semibold">{currentRole}</span>
+                  </div>
+                </div>
+
+                <button
+                  onClick={() => navigate(`/dashboard/${currentRole}`)}
+                  className="btn-black px-4 py-2 text-xs font-extrabold flex items-center gap-1.5 shadow-md"
+                >
+                  Dashboard <ArrowRight className="w-3.5 h-3.5 text-[#ff5500]" />
+                </button>
+              </div>
             ) : (
-              <>
+              <div className="flex items-center gap-2">
                 <Link
-                  to="/login"
-                  className="btn-white px-4 py-2 text-xs font-extrabold shadow-xs"
+                  to="/login?mode=login"
+                  className="text-zinc-700 hover:text-zinc-950 font-semibold text-sm px-3 py-2 transition"
                 >
-                  Login
+                  Log in
                 </Link>
                 <Link
-                  to="/login"
-                  className="btn-black px-4 py-2 text-xs font-extrabold shadow-md flex items-center gap-1.5"
+                  to="/login?mode=register"
+                  className="px-6 py-2.5 rounded-full bg-[#1b64f2] hover:bg-[#1552cc] text-white font-bold text-sm shadow-md shadow-blue-500/25 transition-all hover:scale-105"
                 >
-                  Join Community <ArrowRight className="w-3.5 h-3.5 text-[#ff5500]" />
+                  Join Now
                 </Link>
-              </>
+              </div>
             )}
           </div>
 
