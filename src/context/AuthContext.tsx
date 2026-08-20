@@ -73,27 +73,33 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [currentRole, setCurrentRole] = useState<UserRole>('student');
-  const [currentUser, setCurrentUser] = useState<{ id: string; email: string } | null>(null);
-  const [profile, setProfile] = useState<UserProfile | null>(null);
-  const [studentProfile, setStudentProfile] = useState<StudentProfile | null>(null);
-  const [alumniProfiles, setAlumniProfiles] = useState<(AlumniProfile & { name: string; email: string; photo: string })[]>([]);
+  const [currentUser, setCurrentUser] = useState<{ id: string; email: string } | null>({
+    id: 'usr-student-1',
+    email: 'shanto.student@iub.edu.bd'
+  });
+  const [profile, setProfile] = useState<UserProfile | null>(INITIAL_PROFILES['student'] as UserProfile);
+  const [studentProfile, setStudentProfile] = useState<StudentProfile | null>(INITIAL_STUDENT_PROFILE);
+  const [alumniProfiles, setAlumniProfiles] = useState<(AlumniProfile & { name: string; email: string; photo: string })[]>(INITIAL_ALUMNI_PROFILES);
   
-  const [jobs, setJobs] = useState<JobListing[]>([]);
+  const [jobs, setJobs] = useState<JobListing[]>(INITIAL_JOBS);
   const [internships, setInternships] = useState<JobListing[]>([]);
   const [applications, setApplications] = useState<ApplicationRecord[]>([]);
   const [mentorshipRequests, setMentorshipRequests] = useState<MentorshipRequestRecord[]>([]);
-  const [events, setEvents] = useState<EventRecord[]>([]);
+  const [events, setEvents] = useState<EventRecord[]>(INITIAL_EVENTS);
   const [notifications, setNotifications] = useState<NotificationRecord[]>([]);
   const [appointments, setAppointments] = useState<AppointmentRecord[]>([]);
   
   const [isLoading, setIsLoading] = useState<boolean>(false);
 
-  // Switch Active User Role
+  // Switch Active User Role (Demo Mode Persona Switcher)
   const switchRole = (role: UserRole) => {
     setCurrentRole(role);
-    if (profile) {
-      setProfile(prev => prev ? { ...prev, role } : null);
-    }
+    const demoProf = INITIAL_PROFILES[role] as UserProfile;
+    setProfile(demoProf);
+    setCurrentUser({
+      id: `usr-${role}-1`,
+      email: demoProf?.email || `${role}@iub.edu.bd`
+    });
   };
 
   // Login by Username or Email

@@ -250,6 +250,7 @@ export interface JobListing {
   description: string;
   created_at: string;
   employer_id?: string;
+  is_published?: boolean;
 }
 
 export interface ApplicationRecord {

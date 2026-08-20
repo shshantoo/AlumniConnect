@@ -25,7 +25,7 @@ export const HomePage: React.FC = () => {
   const navigate = useNavigate();
   const { 
     currentUser, currentRole, profile, 
-    homeMedia, addHomeMedia, deleteHomeMedia, togglePublishHomeMedia 
+    homeMedia, addHomeMedia, deleteHomeMedia, togglePublishHomeMedia, switchRole 
   } = useAuth();
   const [searchTerm, setSearchTerm] = useState('');
 
@@ -128,14 +128,43 @@ export const HomePage: React.FC = () => {
             </div>
           </Link>
 
-          {/* Navigation Links */}
-          <nav className="hidden md:flex items-center gap-6 text-xs font-bold text-zinc-700">
-            <a href="#hero" className="hover:text-[#ff5500] transition">Home</a>
-            <a href="#directory" className="hover:text-[#ff5500] transition">Alumni</a>
-            <a href="#careers" className="hover:text-[#ff5500] transition">Careers</a>
-            <a href="#mentorship" className="hover:text-[#ff5500] transition">Mentorship</a>
-            <a href="#events" className="hover:text-[#ff5500] transition">Events</a>
-          </nav>
+          {/* Navigation Links & Demo Persona Switcher */}
+          <div className="hidden xl:flex items-center gap-6 text-xs font-bold text-zinc-700">
+            <nav className="flex items-center gap-5">
+              <a href="#hero" className="hover:text-[#ff5500] transition">Home</a>
+              <a href="#directory" className="hover:text-[#ff5500] transition">Alumni</a>
+              <a href="#careers" className="hover:text-[#ff5500] transition">Careers</a>
+              <a href="#mentorship" className="hover:text-[#ff5500] transition">Mentorship</a>
+              <a href="#events" className="hover:text-[#ff5500] transition">Events</a>
+            </nav>
+
+            {/* Demo Persona Switcher Pills */}
+            <div className="flex items-center gap-1 bg-[#f0ede6] border border-[#e5e0d5] p-1 rounded-xl shadow-2xs">
+              <span className="text-[10px] font-bold text-[#ff5500] px-1.5 uppercase tracking-wider">Demo Persona:</span>
+              {[
+                { role: 'student', label: '🎓 Student' },
+                { role: 'alumni', label: '💼 Alumni' },
+                { role: 'employer', label: '🏢 Employer' },
+                { role: 'faculty', label: '👨‍🏫 Faculty' },
+                { role: 'admin', label: '🛡️ Admin' },
+              ].map(p => (
+                <button
+                  key={p.role}
+                  onClick={() => {
+                    switchRole(p.role as any);
+                    navigate(`/dashboard/${p.role}`);
+                  }}
+                  className={`px-2 py-0.5 rounded-lg text-[11px] font-extrabold transition ${
+                    currentRole === p.role 
+                      ? 'bg-[#0a0a0a] text-white shadow-xs' 
+                      : 'text-zinc-700 hover:text-zinc-950 hover:bg-white'
+                  }`}
+                >
+                  {p.label}
+                </button>
+              ))}
+            </div>
+          </div>
 
           {/* Auth Actions Matching Attachment */}
           <div className="flex items-center gap-3">
