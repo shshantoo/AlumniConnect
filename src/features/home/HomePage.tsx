@@ -172,7 +172,7 @@ export const HomePage: React.FC = () => {
                 </Link>
                 <Link
                   to="/login?mode=register"
-                  className="px-6 py-2.5 rounded-full bg-[#1b64f2] hover:bg-[#1552cc] text-white font-bold text-sm shadow-md shadow-blue-500/25 transition-all hover:scale-105"
+                  className="px-6 py-2.5 rounded-full bg-[#ff5500] hover:bg-[#e04b00] text-white font-extrabold text-sm shadow-md shadow-orange-500/30 transition-all hover:scale-105 flex items-center justify-center cursor-pointer"
                 >
                   Join Now
                 </Link>
