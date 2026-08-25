@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { 
-  Bell, Search, User as UserIcon, LogOut, Menu,
+  Bell, User as UserIcon, LogOut, Menu,
   GraduationCap, Briefcase
 } from 'lucide-react';
 import { DEFAULT_STUDENT_PHOTO } from '../../mock/seedData';
@@ -49,24 +49,6 @@ export const Navbar: React.FC<NavbarProps> = ({ onToggleSidebar }) => {
               </span>
             </div>
           </Link>
-        </div>
-
-        {/* Center: Search Bar */}
-        <div className="hidden md:flex flex-1 max-w-md mx-4">
-          <div className="relative w-full">
-            <Search className="w-4 h-4 text-zinc-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
-            <input
-              type="text"
-              placeholder="Search alumni by name, company, skill, or batch..."
-              className="w-full bg-white border border-[#e5e0d5] rounded-xl pl-10 pr-4 py-2 text-sm text-zinc-900 placeholder-zinc-400 focus:outline-none focus:border-[#ff5500] transition shadow-2xs"
-              onKeyDown={(e) => {
-                if (e.key === 'Enter') {
-                  const target = e.target as HTMLInputElement;
-                  navigate(`/directory?search=${encodeURIComponent(target.value)}`);
-                }
-              }}
-            />
-          </div>
         </div>
 
         {/* Right Section: Notifications & User Profile */}
