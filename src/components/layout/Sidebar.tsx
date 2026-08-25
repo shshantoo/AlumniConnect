@@ -36,7 +36,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
       groupTitle: 'CAREER TOOLKIT',
       items: [
         { label: 'My Profile & CV', path: '/profile', icon: User },
-        { label: '✨ AI CV Review', path: '/cv/ai-review', icon: Sparkles },
+        { label: 'Resume & CV Review', path: '/cv/ai-review', icon: FileText },
       ],
     },
     {

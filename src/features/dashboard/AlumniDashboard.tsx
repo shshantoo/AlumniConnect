@@ -13,7 +13,7 @@ const MOCK_PENDING_STUDENTS: StudentProfileData[] = [
     id: 'std-1',
     name: 'Shanto Rahman',
     email: 'shanto.rahman@iub.edu.bd',
-    photo: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=300&q=80',
+    photo: '/images/student-profile.png',
     department: 'B.Sc. in Computer Science & Engineering',
     graduation_year: '2026',
     cgpa: '3.88',

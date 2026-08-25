@@ -64,7 +64,7 @@ export const ProfilePage: React.FC = () => {
           {/* Avatar with Instant Photo Upload Overlay */}
           <div className="relative group w-24 h-24 sm:w-28 sm:h-28 flex-shrink-0">
             <img
-              src={profile?.photo || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=300&q=80'}
+              src={profile?.photo || '/images/student-profile.png'}
               alt="Profile Avatar"
               className="w-24 h-24 sm:w-28 sm:h-28 rounded-2xl object-cover ring-4 ring-[#ff5500]/20 shadow-md"
             />
@@ -87,21 +87,12 @@ export const ProfilePage: React.FC = () => {
               {/* ACTION BUTTONS GROUP */}
               <div className="flex flex-wrap items-center gap-2 justify-center sm:justify-start lg:justify-end">
                 {currentRole === 'student' && (
-                  <>
-                    <button
-                      onClick={() => navigate('/cv/ai-review')}
-                      className="px-4 py-2 bg-gradient-to-r from-amber-500 to-[#ff5500] hover:opacity-95 text-white text-xs font-black rounded-xl flex items-center gap-1.5 shadow-md transition-all"
-                    >
-                      <Sparkles className="w-4 h-4" /> Improve with AI
-                    </button>
-
-                    <button
-                      onClick={() => setIsCvBuilderOpen(true)}
-                      className="btn-black px-4 py-2 text-xs font-bold flex items-center gap-1.5 shadow-md"
-                    >
-                      <Edit3 className="w-4 h-4 text-[#ff5500]" /> Launch CV Builder
-                    </button>
-                  </>
+                  <button
+                    onClick={() => setIsCvBuilderOpen(true)}
+                    className="btn-black px-4 py-2 text-xs font-bold flex items-center gap-1.5 shadow-md"
+                  >
+                    <Edit3 className="w-4 h-4 text-[#ff5500]" /> Edit Profile & CV
+                  </button>
                 )}
 
                 <button

@@ -55,12 +55,8 @@ export const StudentProfileModal: React.FC<StudentProfileModalProps> = ({
           </button>
 
           <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
-            <div className="w-16 h-16 rounded-2xl bg-[#ff5500] text-white font-black flex items-center justify-center text-2xl ring-4 ring-white/10 flex-shrink-0 shadow-lg">
-              {student.photo ? (
-                <img src={student.photo} alt={student.name} className="w-full h-full rounded-2xl object-cover" />
-              ) : (
-                student.name.charAt(0)
-              )}
+            <div className="w-16 h-16 rounded-2xl bg-[#ff5500] text-white font-black flex items-center justify-center text-2xl ring-4 ring-white/10 flex-shrink-0 shadow-lg overflow-hidden">
+              <img src={student.photo || '/images/student-profile.png'} alt={student.name} className="w-full h-full rounded-2xl object-cover" />
             </div>
 
             <div className="space-y-1">

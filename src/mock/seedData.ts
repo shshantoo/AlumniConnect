@@ -18,6 +18,7 @@ export const INITIAL_PROFILES: Record<string, any> = {
     headline: 'Senior CSE Undergraduate & Full-Stack Engineer',
     email: 'shanto.student@iub.edu.bd',
     phone: '+880 1700-123456',
+    photo: '/images/student-profile.png',
     country: 'Bangladesh',
     location: 'Dhaka',
     university: 'Independent University, Bangladesh (IUB)',
