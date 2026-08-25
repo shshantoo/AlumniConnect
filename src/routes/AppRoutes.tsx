@@ -22,7 +22,7 @@ import { EventsPage } from '../features/events/EventsPage';
 import { AppointmentsPage } from '../features/appointments/AppointmentsPage';
 import { ProfilePage } from '../features/profile/ProfilePage';
 
-// New Career Intelligence & Smart Mentorship Imports
+// Career Intelligence & Smart Mentorship Imports
 import { CareerAssessment } from '../features/career/pages/CareerAssessment';
 import { CareerAnalysis } from '../features/career/pages/CareerAnalysis';
 import { CareerRoadmap } from '../features/career/pages/CareerRoadmap';
@@ -80,17 +80,21 @@ export const AppRoutes: React.FC = () => {
               <Route path="/dashboard/admin" element={<ProtectedRoute><PageTransition><AdminDashboard /></PageTransition></ProtectedRoute>} />
               
               {/* Career Intelligence Engine Routes */}
+              <Route path="/career-intelligence" element={<ProtectedRoute><PageTransition><CareerAnalysis /></PageTransition></ProtectedRoute>} />
               <Route path="/career/assessment" element={<ProtectedRoute><PageTransition><CareerAssessment /></PageTransition></ProtectedRoute>} />
               <Route path="/career/analysis" element={<ProtectedRoute><PageTransition><CareerAnalysis /></PageTransition></ProtectedRoute>} />
+              <Route path="/career-roadmap" element={<ProtectedRoute><PageTransition><CareerRoadmap /></PageTransition></ProtectedRoute>} />
               <Route path="/career/roadmap" element={<ProtectedRoute><PageTransition><CareerRoadmap /></PageTransition></ProtectedRoute>} />
 
               {/* Smart Alumni Mentor Matching Routes */}
-              <Route path="/mentorship/preferences" element={<ProtectedRoute><PageTransition><MentorPreferences /></PageTransition></ProtectedRoute>} />
+              <Route path="/mentors/recommended" element={<ProtectedRoute><PageTransition><MentorMatches /></PageTransition></ProtectedRoute>} />
               <Route path="/mentorship/matches" element={<ProtectedRoute><PageTransition><MentorMatches /></PageTransition></ProtectedRoute>} />
+              <Route path="/mentorship/preferences" element={<ProtectedRoute><PageTransition><MentorPreferences /></PageTransition></ProtectedRoute>} />
 
               {/* AI CV Review Assistant Routes */}
               <Route path="/cv/ai-review" element={<ProtectedRoute><PageTransition><AiCvReviewPage /></PageTransition></ProtectedRoute>} />
               <Route path="/cv/ai-review/:cvId" element={<ProtectedRoute><PageTransition><AiCvReviewPage /></PageTransition></ProtectedRoute>} />
+              <Route path="/ai" element={<ProtectedRoute><PageTransition><CareerAnalysis /></PageTransition></ProtectedRoute>} />
 
               {/* Core Ecosystem Pages */}
               <Route path="/directory" element={<ProtectedRoute><PageTransition><AlumniDirectoryPage /></PageTransition></ProtectedRoute>} />
