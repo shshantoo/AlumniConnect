@@ -3,7 +3,8 @@ import { NavLink } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { 
   LayoutDashboard, Target, Map, Sparkles, GraduationCap, Users, 
-  MapPin, User, FileText, Briefcase, Calendar, ShieldCheck, Award 
+  MapPin, User, FileText, Briefcase, Calendar, ShieldCheck, Award,
+  MessageSquare, HelpCircle, Bookmark
 } from 'lucide-react';
 
 interface SidebarProps {
@@ -22,6 +23,15 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
         { label: 'Career Assessment', path: '/career/assessment', icon: Target },
         { label: 'Career Readiness', path: '/career/analysis', icon: Sparkles },
         { label: 'My Roadmap', path: '/career/roadmap', icon: Map },
+      ],
+    },
+    {
+      groupTitle: 'COMMUNITY',
+      items: [
+        { label: 'Community Feed', path: '/community', icon: MessageSquare },
+        { label: 'Ask Question', path: '/community/ask', icon: HelpCircle },
+        { label: 'My Questions', path: '/community/my-questions', icon: FileText },
+        { label: 'Saved Discussions', path: '/community/saved', icon: Bookmark },
       ],
     },
     {
@@ -50,6 +60,10 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
 
   const genericNavItems = [
     { label: 'Dashboard', path: `/dashboard/${currentRole}`, icon: LayoutDashboard },
+    { label: 'Community Feed', path: '/community', icon: MessageSquare },
+    { label: 'Ask Question', path: '/community/ask', icon: HelpCircle },
+    { label: 'My Questions', path: '/community/my-questions', icon: FileText },
+    { label: 'Saved Discussions', path: '/community/saved', icon: Bookmark },
     { label: 'Career Analysis', path: '/career/analysis', icon: Target },
     { label: 'Alumni Directory', path: '/directory', icon: Users },
     { label: 'Mentorship Program', path: '/mentorship', icon: GraduationCap },
@@ -138,16 +152,29 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
           )}
 
           {currentRole === 'admin' && (
-            <NavLink
-              to="/dashboard/admin"
-              onClick={onClose}
-              className="flex items-center justify-between px-3.5 py-2.5 rounded-xl font-bold text-xs bg-amber-50 border border-amber-200 text-amber-950 hover:bg-amber-100 transition-all mt-4"
-            >
-              <div className="flex items-center gap-3">
-                <ShieldCheck className="w-4 h-4 text-[#ff5500]" />
-                <span>Admin Control Center</span>
-              </div>
-            </NavLink>
+            <div className="space-y-2 mt-4">
+              <NavLink
+                to="/dashboard/admin"
+                onClick={onClose}
+                className="flex items-center justify-between px-3.5 py-2.5 rounded-xl font-bold text-xs bg-amber-50 border border-amber-200 text-amber-950 hover:bg-amber-100 transition-all"
+              >
+                <div className="flex items-center gap-3">
+                  <ShieldCheck className="w-4 h-4 text-[#ff5500]" />
+                  <span>Admin Control Center</span>
+                </div>
+              </NavLink>
+
+              <NavLink
+                to="/admin/community"
+                onClick={onClose}
+                className="flex items-center justify-between px-3.5 py-2.5 rounded-xl font-bold text-xs bg-purple-50 border border-purple-200 text-purple-950 hover:bg-purple-100 transition-all"
+              >
+                <div className="flex items-center gap-3">
+                  <ShieldCheck className="w-4 h-4 text-purple-600" />
+                  <span>Community Moderation</span>
+                </div>
+              </NavLink>
+            </div>
           )}
         </div>
 

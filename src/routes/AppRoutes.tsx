@@ -28,6 +28,15 @@ import { MentorPreferences } from '../features/mentorship/pages/MentorPreference
 import { MentorMatches } from '../features/mentorship/pages/MentorMatches';
 import { AiCvReviewPage } from '../features/ai-cv/pages/AiCvReviewPage';
 
+// AlumniConnect Community Imports
+import { CommunityPage } from '../features/community/pages/CommunityPage';
+import { AskQuestionPage } from '../features/community/pages/AskQuestionPage';
+import { QuestionDetailPage } from '../features/community/pages/QuestionDetailPage';
+import { MyQuestionsPage } from '../features/community/pages/MyQuestionsPage';
+import { SavedQuestionsPage } from '../features/community/pages/SavedQuestionsPage';
+import { AdminCommunityPage } from '../features/community/pages/AdminCommunityPage';
+import { AdminReportsPage } from '../features/community/pages/AdminReportsPage';
+
 // Strict Authentication Guard
 const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { currentUser } = useAuth();
@@ -92,6 +101,15 @@ export const AppRoutes: React.FC = () => {
               <Route path="/cv/ai-review" element={<ProtectedRoute><PageTransition><AiCvReviewPage /></PageTransition></ProtectedRoute>} />
               <Route path="/cv/ai-review/:cvId" element={<ProtectedRoute><PageTransition><AiCvReviewPage /></PageTransition></ProtectedRoute>} />
               <Route path="/ai" element={<ProtectedRoute><PageTransition><CareerAnalysis /></PageTransition></ProtectedRoute>} />
+
+              {/* AlumniConnect Community Routes */}
+              <Route path="/community" element={<ProtectedRoute><PageTransition><CommunityPage /></PageTransition></ProtectedRoute>} />
+              <Route path="/community/ask" element={<ProtectedRoute><PageTransition><AskQuestionPage /></PageTransition></ProtectedRoute>} />
+              <Route path="/community/questions/:questionId" element={<ProtectedRoute><PageTransition><QuestionDetailPage /></PageTransition></ProtectedRoute>} />
+              <Route path="/community/my-questions" element={<ProtectedRoute><PageTransition><MyQuestionsPage /></PageTransition></ProtectedRoute>} />
+              <Route path="/community/saved" element={<ProtectedRoute><PageTransition><SavedQuestionsPage /></PageTransition></ProtectedRoute>} />
+              <Route path="/admin/community" element={<ProtectedRoute><PageTransition><AdminCommunityPage /></PageTransition></ProtectedRoute>} />
+              <Route path="/admin/community/reports" element={<ProtectedRoute><PageTransition><AdminReportsPage /></PageTransition></ProtectedRoute>} />
 
               {/* Core Ecosystem Pages */}
               <Route path="/directory" element={<ProtectedRoute><PageTransition><AlumniDirectoryPage /></PageTransition></ProtectedRoute>} />
