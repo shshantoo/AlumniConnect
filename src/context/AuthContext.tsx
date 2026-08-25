@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { supabase } from '../utils/supabase';
+import { supabase, updateProfileInSupabase } from '../utils/supabase';
 import { 
   UserRole, UserProfile, StudentProfile, AlumniProfile,
   JobListing, ApplicationRecord, MentorshipRequestRecord, 
@@ -94,10 +94,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   // Switch Active User Role (Demo Mode Persona Switcher)
   const switchRole = (role: UserRole) => {
     setCurrentRole(role);
-    const demoProf = INITIAL_PROFILES[role] as UserProfile;
+    let demoProf = INITIAL_PROFILES[role] as UserProfile;
+    try {
+      const saved = localStorage.getItem(`alumniconnect_profile_${role}`);
+      if (saved) {
+        demoProf = JSON.parse(saved);
+      }
+    } catch (e) {}
     setProfile(demoProf);
     setCurrentUser({
-      id: `usr-${role}-1`,
+      id: demoProf?.user_id || `usr-${role}-1`,
       email: demoProf?.email || `${role}@iub.edu.bd`
     });
   };
@@ -263,9 +269,51 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
-  // Update Profile Data
+  // Update Profile Data & Persist to Database & Local Storage
   const updateUserProfile = (updatedData: Partial<UserProfile>) => {
-    setProfile(prev => (prev ? { ...prev, ...updatedData } : (updatedData as UserProfile)));
+    setProfile(prev => {
+      const base = prev || (INITIAL_PROFILES[currentRole] as UserProfile);
+      const merged: UserProfile = {
+        ...base,
+        ...updatedData,
+        updated_at: new Date().toISOString()
+      };
+
+      // 1. Save to localStorage database for persistent offline access across reloads
+      try {
+        localStorage.setItem(`alumniconnect_profile_${merged.role || currentRole}`, JSON.stringify(merged));
+        if (merged.user_id) {
+          localStorage.setItem(`alumniconnect_profile_${merged.user_id}`, JSON.stringify(merged));
+        }
+      } catch (e) {
+        console.error('LocalStorage profile save error:', e);
+      }
+
+      // 2. Save/Upsert directly to Supabase database table
+      try {
+        updateProfileInSupabase(merged.user_id || `usr-${currentRole}-1`, merged);
+      } catch (e) {
+        console.warn('Supabase sync warning:', e);
+      }
+
+      // 3. If Alumni, sync updated photo and info into directory lists
+      if (merged.role === 'alumni') {
+        setAlumniProfiles(prevAlm => prevAlm.map(a => {
+          if (a.user_id === merged.user_id || a.email === merged.email) {
+            return {
+              ...a,
+              name: merged.full_name || a.name,
+              photo: merged.photo || a.photo,
+              company: (merged as any).alumni_preferences?.current_company || (merged as any).company || a.company,
+              position: (merged as any).alumni_preferences?.current_title || merged.headline || a.position
+            };
+          }
+          return a;
+        }));
+      }
+
+      return merged;
+    });
   };
 
   const logout = () => {

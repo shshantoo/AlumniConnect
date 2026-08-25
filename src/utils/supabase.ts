@@ -39,3 +39,23 @@ export async function uploadProfilePictureToSupabase(
     reader.readAsDataURL(file);
   });
 }
+
+/**
+ * Upserts profile information to Supabase database table 'profiles'
+ */
+export async function updateProfileInSupabase(userId: string, updatedData: any) {
+  try {
+    const { error } = await supabase
+      .from('profiles')
+      .upsert({
+        user_id: userId,
+        ...updatedData,
+        updated_at: new Date().toISOString()
+      }, { onConflict: 'user_id' });
+    if (error) {
+      console.warn('Supabase profile database upsert info:', error.message);
+    }
+  } catch (err) {
+    console.warn('Supabase database sync offline fallback:', err);
+  }
+}

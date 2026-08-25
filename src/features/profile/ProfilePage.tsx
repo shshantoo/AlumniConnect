@@ -86,14 +86,12 @@ export const ProfilePage: React.FC = () => {
 
               {/* ACTION BUTTONS GROUP */}
               <div className="flex flex-wrap items-center gap-2 justify-center sm:justify-start lg:justify-end">
-                {currentRole === 'student' && (
-                  <button
-                    onClick={() => setIsCvBuilderOpen(true)}
-                    className="btn-black px-4 py-2 text-xs font-bold flex items-center gap-1.5 shadow-md"
-                  >
-                    <Edit3 className="w-4 h-4 text-[#ff5500]" /> Edit Profile & CV
-                  </button>
-                )}
+                <button
+                  onClick={() => setIsCvBuilderOpen(true)}
+                  className="btn-black px-4 py-2 text-xs font-bold flex items-center gap-1.5 shadow-md"
+                >
+                  <Edit3 className="w-4 h-4 text-[#ff5500]" /> Edit Profile & CV
+                </button>
 
                 <button
                   onClick={() => setIsPdfPreviewOpen(true)}
