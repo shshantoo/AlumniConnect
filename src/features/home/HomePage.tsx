@@ -9,6 +9,7 @@ import {
   Video, Plus, Trash2, Eye, EyeOff, Play
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
+import { DEFAULT_STUDENT_PHOTO } from '../../mock/seedData';
 import { INITIAL_ALUMNI_PROFILES, INITIAL_JOBS, INITIAL_EVENTS } from '../../mock/seedData';
 
 const MAP_STOPS = [
@@ -143,7 +144,10 @@ export const HomePage: React.FC = () => {
               <div className="flex items-center gap-3">
                 <div className="flex items-center gap-2.5 bg-[#f8f6f0] border border-[#e5e0d5] px-3 py-1.5 rounded-xl">
                   <img
-                    src={profile?.photo || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=300&q=80'}
+                    src={profile?.photo || DEFAULT_STUDENT_PHOTO}
+                    onError={(e) => {
+                      (e.target as HTMLImageElement).src = DEFAULT_STUDENT_PHOTO;
+                    }}
                     alt="User Avatar"
                     className="w-7 h-7 rounded-lg object-cover ring-2 ring-[#ff5500]/30"
                   />

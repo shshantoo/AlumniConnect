@@ -11,6 +11,7 @@ import {
 } from 'lucide-react';
 import { generateCvPdf } from '../../utils/generatePdf';
 import { CvTemplateEngine, CvTemplateType } from '../../components/profile/CvTemplateEngine';
+import { DEFAULT_STUDENT_PHOTO } from '../../mock/seedData';
 
 interface CvBuilderModalProps {
   initialProfile: Partial<UserProfile> | null;
@@ -45,7 +46,7 @@ export const CvBuilderModal: React.FC<CvBuilderModalProps> = ({
     dob: initialProfile?.dob || '',
     gender: initialProfile?.gender || '',
     nationality: initialProfile?.nationality || '',
-    photo: initialProfile?.photo || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=300&q=80',
+    photo: initialProfile?.photo || DEFAULT_STUDENT_PHOTO,
     bio: initialProfile?.bio || '',
     linkedin: initialProfile?.linkedin || '',
     portfolio: initialProfile?.portfolio || '',

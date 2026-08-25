@@ -8,7 +8,8 @@ import {
 import { 
   INITIAL_PROFILES, INITIAL_STUDENT_PROFILE, INITIAL_ALUMNI_PROFILES, 
   INITIAL_JOBS, INITIAL_APPLICATIONS, INITIAL_MENTORSHIP_REQUESTS, 
-  INITIAL_EVENTS, INITIAL_NOTIFICATIONS, INITIAL_APPOINTMENTS 
+  INITIAL_EVENTS, INITIAL_NOTIFICATIONS, INITIAL_APPOINTMENTS,
+  DEFAULT_STUDENT_PHOTO
 } from '../mock/seedData';
 
 interface AuthContextType {
@@ -77,7 +78,19 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     id: 'usr-student-1',
     email: 'shanto.student@iub.edu.bd'
   });
-  const [profile, setProfile] = useState<UserProfile | null>(INITIAL_PROFILES['student'] as UserProfile);
+  const [profile, setProfile] = useState<UserProfile | null>(() => {
+    try {
+      const saved = localStorage.getItem('alumniconnect_profile_student');
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (parsed && (!parsed.photo || parsed.photo.includes('unsplash.com'))) {
+          parsed.photo = DEFAULT_STUDENT_PHOTO;
+        }
+        return parsed;
+      }
+    } catch (e) {}
+    return INITIAL_PROFILES['student'] as UserProfile;
+  });
   const [studentProfile, setStudentProfile] = useState<StudentProfile | null>(INITIAL_STUDENT_PROFILE);
   const [alumniProfiles, setAlumniProfiles] = useState<(AlumniProfile & { name: string; email: string; photo: string })[]>(INITIAL_ALUMNI_PROFILES);
   

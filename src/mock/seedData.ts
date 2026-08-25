@@ -1,8 +1,11 @@
+import studentPhotoAsset from '../assets/student-profile.png';
 import { 
   User, Profile, StudentProfile, AlumniProfile, EmployerProfile, 
   Job, Internship, JobApplication, MentorshipRequest, EventItem, NotificationItem, 
   Appointment, Department, CountryStat, SystemReport, HomeMediaItem 
 } from '../types/database.types';
+
+export const DEFAULT_STUDENT_PHOTO = studentPhotoAsset;
 
 export const INITIAL_USERS: User[] = [];
 
@@ -18,7 +21,7 @@ export const INITIAL_PROFILES: Record<string, any> = {
     headline: 'Senior CSE Undergraduate & Full-Stack Engineer',
     email: 'shanto.student@iub.edu.bd',
     phone: '+880 1700-123456',
-    photo: '/images/student-profile.png',
+    photo: DEFAULT_STUDENT_PHOTO,
     country: 'Bangladesh',
     location: 'Dhaka',
     university: 'Independent University, Bangladesh (IUB)',

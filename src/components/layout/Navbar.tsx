@@ -5,6 +5,7 @@ import {
   Bell, Search, User as UserIcon, LogOut, Menu,
   GraduationCap, Briefcase
 } from 'lucide-react';
+import { DEFAULT_STUDENT_PHOTO } from '../../mock/seedData';
 
 interface NavbarProps {
   onToggleSidebar: () => void;
@@ -134,7 +135,10 @@ export const Navbar: React.FC<NavbarProps> = ({ onToggleSidebar }) => {
                   className="flex items-center gap-2.5 p-1.5 rounded-xl hover:bg-[#f0ede6] transition border border-transparent hover:border-[#e5e0d5]"
                 >
                   <img
-                    src={profile?.photo || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=300&q=80'}
+                    src={profile?.photo || DEFAULT_STUDENT_PHOTO}
+                    onError={(e) => {
+                      (e.target as HTMLImageElement).src = DEFAULT_STUDENT_PHOTO;
+                    }}
                     alt="Profile Avatar"
                     className="w-8 h-8 rounded-lg object-cover ring-2 ring-[#ff5500]/30"
                   />

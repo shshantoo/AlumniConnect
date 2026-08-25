@@ -10,6 +10,7 @@ import { CvBuilderModal } from './CvBuilderModal';
 import { uploadProfilePictureToSupabase } from '../../utils/supabase';
 import { generateCvPdf } from '../../utils/generatePdf';
 import { CvTemplateEngine, CvTemplateType } from '../../components/profile/CvTemplateEngine';
+import { DEFAULT_STUDENT_PHOTO } from '../../mock/seedData';
 
 export const ProfilePage: React.FC = () => {
   const navigate = useNavigate();
@@ -64,7 +65,10 @@ export const ProfilePage: React.FC = () => {
           {/* Avatar with Instant Photo Upload Overlay */}
           <div className="relative group w-24 h-24 sm:w-28 sm:h-28 flex-shrink-0">
             <img
-              src={profile?.photo || '/images/student-profile.png'}
+              src={profile?.photo || DEFAULT_STUDENT_PHOTO}
+              onError={(e) => {
+                (e.target as HTMLImageElement).src = DEFAULT_STUDENT_PHOTO;
+              }}
               alt="Profile Avatar"
               className="w-24 h-24 sm:w-28 sm:h-28 rounded-2xl object-cover ring-4 ring-[#ff5500]/20 shadow-md"
             />
