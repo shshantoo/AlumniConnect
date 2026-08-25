@@ -1,5 +1,5 @@
 import { 
-  User, Profile, StudentProfile, AlumniProfile, EmployerProfile, FacultyProfile, 
+  User, Profile, StudentProfile, AlumniProfile, EmployerProfile, 
   Job, Internship, JobApplication, MentorshipRequest, EventItem, NotificationItem, 
   Appointment, Department, CountryStat, SystemReport, HomeMediaItem 
 } from '../types/database.types';
@@ -108,25 +108,6 @@ export const INITIAL_PROFILES: Record<string, any> = {
     country: 'United States',
     location: 'San Francisco, CA',
     company_name: 'Stripe',
-    verification_status: 'verified',
-    account_status: 'active',
-    created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString()
-  },
-  faculty: {
-    id: 'prof-fac-1',
-    user_id: 'usr-faculty-1',
-    role: 'faculty',
-    full_name: 'Prof. Alan Turing Jr.',
-    first_name: 'Alan',
-    last_name: 'Turing',
-    username: 'alan.turing',
-    headline: 'Department Chair & Professor of Computer Science',
-    email: 'turing@iub.edu.bd',
-    country: 'Bangladesh',
-    location: 'Dhaka',
-    school: 'SETS',
-    department: 'CSE',
     verification_status: 'verified',
     account_status: 'active',
     created_at: new Date().toISOString(),

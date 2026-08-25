@@ -64,7 +64,7 @@ interface AuthContextType {
   addHomeMedia: (data: Partial<HomeMediaItem>) => void;
   deleteHomeMedia: (id: string) => void;
   togglePublishHomeMedia: (id: string) => void;
-  bookAppointment: (facultyId: string, facultyName: string, date: string, topic: string) => void;
+  bookAppointment?: (facultyId: string, facultyName: string, date: string, topic: string) => void;
   markNotificationRead: (id: string) => void;
   updateApplicationStatus: (appId: string, newStatus: 'Pending' | 'Reviewing' | 'Shortlisted' | 'Accepted' | 'Rejected') => void;
 }

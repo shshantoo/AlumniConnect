@@ -200,7 +200,6 @@ export const AuthPage: React.FC = () => {
           { id: 'student', label: 'Student', icon: GraduationCap },
           { id: 'alumni', label: 'Alumni', icon: Briefcase },
           { id: 'employer', label: 'Employer', icon: Building2 },
-          { id: 'faculty', label: 'Faculty', icon: BookOpen },
           { id: 'admin', label: 'Admin', icon: ShieldCheck },
         ].map(tab => {
           const Icon = tab.icon;

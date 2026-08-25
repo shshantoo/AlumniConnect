@@ -7,7 +7,6 @@ const ROLES: { id: UserRole; label: string; icon: React.FC<{ className?: string 
   { id: 'student', label: 'Student View', icon: GraduationCap },
   { id: 'alumni', label: 'Alumni View', icon: Briefcase },
   { id: 'employer', label: 'Employer View', icon: Building2 },
-  { id: 'faculty', label: 'Faculty View', icon: BookOpen },
   { id: 'admin', label: 'Admin Portal', icon: ShieldCheck },
 ];
 

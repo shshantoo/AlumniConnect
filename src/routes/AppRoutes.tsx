@@ -12,14 +12,12 @@ import { AuthPage } from '../features/auth/AuthPage';
 import { StudentDashboard } from '../features/dashboard/StudentDashboard';
 import { AlumniDashboard } from '../features/dashboard/AlumniDashboard';
 import { EmployerDashboard } from '../features/dashboard/EmployerDashboard';
-import { FacultyDashboard } from '../features/dashboard/FacultyDashboard';
 import { AdminDashboard } from '../features/dashboard/AdminDashboard';
 
 import { AlumniDirectoryPage } from '../features/directory/AlumniDirectoryPage';
 import { JobsPage } from '../features/jobs/JobsPage';
 import { MentorshipPage } from '../features/mentorship/MentorshipPage';
 import { EventsPage } from '../features/events/EventsPage';
-import { AppointmentsPage } from '../features/appointments/AppointmentsPage';
 import { ProfilePage } from '../features/profile/ProfilePage';
 
 // Career Intelligence & Smart Mentorship Imports
@@ -76,7 +74,6 @@ export const AppRoutes: React.FC = () => {
               <Route path="/dashboard/student" element={<ProtectedRoute><PageTransition><StudentDashboard /></PageTransition></ProtectedRoute>} />
               <Route path="/dashboard/alumni" element={<ProtectedRoute><PageTransition><AlumniDashboard /></PageTransition></ProtectedRoute>} />
               <Route path="/dashboard/employer" element={<ProtectedRoute><PageTransition><EmployerDashboard /></PageTransition></ProtectedRoute>} />
-              <Route path="/dashboard/faculty" element={<ProtectedRoute><PageTransition><FacultyDashboard /></PageTransition></ProtectedRoute>} />
               <Route path="/dashboard/admin" element={<ProtectedRoute><PageTransition><AdminDashboard /></PageTransition></ProtectedRoute>} />
               
               {/* Career Intelligence Engine Routes */}
@@ -101,7 +98,6 @@ export const AppRoutes: React.FC = () => {
               <Route path="/jobs" element={<ProtectedRoute><PageTransition><JobsPage /></PageTransition></ProtectedRoute>} />
               <Route path="/mentorship" element={<ProtectedRoute><PageTransition><MentorshipPage /></PageTransition></ProtectedRoute>} />
               <Route path="/events" element={<ProtectedRoute><PageTransition><EventsPage /></PageTransition></ProtectedRoute>} />
-              <Route path="/appointments" element={<ProtectedRoute><PageTransition><AppointmentsPage /></PageTransition></ProtectedRoute>} />
               <Route path="/profile" element={<ProtectedRoute><PageTransition><ProfilePage /></PageTransition></ProtectedRoute>} />
 
               {/* Fallback */}

@@ -12,7 +12,6 @@ export const RolePreviewBar: React.FC = () => {
     { role: 'student', label: 'Student Portal', icon: <GraduationCap className="w-4 h-4 text-[#ff5500]" /> },
     { role: 'alumni', label: 'Alumni Network', icon: <Briefcase className="w-4 h-4 text-orange-600" /> },
     { role: 'employer', label: 'Employer Portal', icon: <Building2 className="w-4 h-4 text-blue-600" /> },
-    { role: 'faculty', label: 'Faculty Portal', icon: <UserCheck className="w-4 h-4 text-emerald-600" /> },
     { role: 'admin', label: 'Admin Governance', icon: <ShieldCheck className="w-4 h-4 text-purple-600" /> },
   ];
 
