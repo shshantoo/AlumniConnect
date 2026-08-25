@@ -69,7 +69,11 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
       )}
 
       <aside
+<<<<<<< HEAD
         className={`fixed lg:sticky top-[65px] left-0 h-[calc(100vh-65px)] w-64 bg-[#f8f6f0] border-r border-[#e5e0d5] z-40 transition-transform duration-300 flex flex-col justify-between p-4 overflow-y-auto ${
+=======
+        className={`fixed lg:sticky top-[97px] left-0 h-[calc(100vh-97px)] w-64 bg-[#f8f6f0] border-r border-[#e5e0d5] z-40 transition-transform duration-300 flex flex-col justify-between p-4 ${
+>>>>>>> a3e5d96 (Backup before AI and career intelligence upgrade)
           isOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
         }`}
       >
