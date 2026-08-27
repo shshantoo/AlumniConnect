@@ -396,4 +396,64 @@ CREATE TABLE IF NOT EXISTS public.cv_ai_suggestions (
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
 
+-- 27. COMMUNITY CATEGORIES TABLE
+CREATE TABLE IF NOT EXISTS public.community_categories (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    name VARCHAR(255) NOT NULL UNIQUE,
+    slug VARCHAR(255) NOT NULL UNIQUE,
+    description TEXT,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+
+-- 28. COMMUNITY QUESTIONS TABLE
+CREATE TABLE IF NOT EXISTS public.community_questions (
+    id VARCHAR(255) PRIMARY KEY,
+    user_id VARCHAR(255) NOT NULL,
+    author_name VARCHAR(255),
+    author_role VARCHAR(50),
+    author_photo TEXT,
+    author_department VARCHAR(255),
+    title VARCHAR(500) NOT NULL,
+    content TEXT NOT NULL,
+    category_id UUID REFERENCES public.community_categories(id) ON DELETE SET NULL,
+    target_audience VARCHAR(50) DEFAULT 'Everyone',
+    status VARCHAR(50) DEFAULT 'active',
+    view_count INTEGER DEFAULT 0,
+    upvote_count INTEGER DEFAULT 0,
+    answer_count INTEGER DEFAULT 0,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+
+-- 29. COMMUNITY ANSWERS TABLE
+CREATE TABLE IF NOT EXISTS public.community_answers (
+    id VARCHAR(255) PRIMARY KEY,
+    question_id VARCHAR(255) REFERENCES public.community_questions(id) ON DELETE CASCADE,
+    user_id VARCHAR(255) NOT NULL,
+    author_name VARCHAR(255),
+    author_role VARCHAR(50),
+    author_photo TEXT,
+    author_department VARCHAR(255),
+    content TEXT NOT NULL,
+    is_accepted BOOLEAN DEFAULT FALSE,
+    status VARCHAR(50) DEFAULT 'active',
+    upvote_count INTEGER DEFAULT 0,
+    reply_count INTEGER DEFAULT 0,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+
+-- 30. HOME MEDIA TABLE
+CREATE TABLE IF NOT EXISTS public.home_media (
+    id VARCHAR(255) PRIMARY KEY,
+    title VARCHAR(255) NOT NULL,
+    type VARCHAR(50) DEFAULT 'image',
+    url TEXT NOT NULL,
+    video_embed_url TEXT,
+    description TEXT,
+    is_published BOOLEAN DEFAULT TRUE,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+
+
 
